@@ -1,0 +1,23 @@
+import { cn } from "@/lib/utils";
+
+export function PageHeader({
+  title,
+  description,
+  actions,
+  className
+}: {
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mb-5 flex flex-col gap-3 border-b border-border pb-4 md:flex-row md:items-end md:justify-between", className)}>
+      <div>
+        <h1 className="text-xl font-semibold tracking-normal text-slate-950">{title}</h1>
+        {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
+      </div>
+      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+    </div>
+  );
+}

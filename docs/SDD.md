@@ -1,0 +1,113 @@
+# SDD - Software Design Document
+
+## Visão geral
+
+O produto é um SaaS web para criação, gestão e acompanhamento de orçamentos para pequenos negócios, engenheiros, prestadores de serviço, autônomos e profissionais que trabalham sozinhos. O MVP prioriza o fluxo operacional: cadastrar clientes, registrar obras/projetos, manter produtos e serviços reutilizáveis, montar orçamentos, calcular totais, acompanhar status e gerar PDF.
+
+Não haverá login no MVP. A modelagem e a arquitetura devem, porém, preparar o sistema para autenticação, workspaces e isolamento multiusuário em fase futura.
+
+## Problema
+
+Profissionais pequenos costumam perder histórico de orçamentos, repetir cálculos em planilhas, refazer propostas antigas manualmente e ter pouca visibilidade sobre valores aprovados, pendentes e recusados. O sistema reduz retrabalho, centraliza dados no Supabase e organiza o funil de orçamentos.
+
+## Público-alvo
+
+- Prestadores de serviço.
+- Pequenos engenheiros e técnicos.
+- Autônomos que fazem orçamentos recorrentes.
+- Pequenas empresas de obra, manutenção, instalação ou serviços.
+- Pessoas que precisam de organização sem complexidade de ERP completo.
+
+## Módulos principais
+
+- Dashboard operacional.
+- Clientes.
+- Obras/projetos.
+- Produtos e serviços.
+- Orçamentos.
+- PDF de orçamento.
+- Relatórios básicos.
+- Configurações da empresa/prestador.
+
+## Fluxo do usuário
+
+1. O usuário abre o dashboard.
+2. Cadastra ou consulta um cliente.
+3. Cadastra uma obra/projeto vinculada ao cliente.
+4. Cadastra produtos ou serviços reutilizáveis.
+5. Cria um orçamento para cliente e obra.
+6. Adiciona itens do catálogo ou itens manuais.
+7. Ajusta quantidades, preços, descontos, escopo e condições.
+8. Salva como rascunho ou altera status para enviado.
+9. Gera PDF.
+10. Atualiza status para aprovado, recusado, expirado ou cancelado.
+11. Acompanha indicadores no dashboard e relatórios.
+
+## Regras de negócio
+
+- Todo dado persistente deve ser salvo no Supabase.
+- Orçamentos sempre pertencem a um workspace.
+- Clientes, projetos e catálogo também pertencem a um workspace.
+- Orçamento deve ter cliente.
+- Projeto é opcional no orçamento, mas quando informado deve pertencer ao mesmo workspace e cliente coerente.
+- Orçamento salvo deve ter ao menos um item.
+- Item deve ter quantidade maior que zero.
+- Valores monetários não devem ser negativos, exceto quando a regra permitir desconto como campo separado.
+- Validade do orçamento não pode ser anterior à data de emissão.
+- Status válidos do orçamento: `draft`, `sent`, `approved`, `rejected`, `expired`, `cancelled`.
+- Mudanças de status devem registrar histórico em `budget_status_history`.
+- Exclusões destrutivas devem pedir confirmação.
+- Cliente, projeto e item de catálogo devem preferir inativação a exclusão física.
+- Cálculos devem ser centralizados para evitar divergência entre tela, persistência e PDF.
+
+## Entidades principais
+
+- `workspaces`: empresa/prestador dono dos dados.
+- `clients`: clientes atendidos.
+- `projects`: obras/projetos vinculados a clientes.
+- `catalog_items`: produtos, serviços, mão de obra, materiais, equipamentos e taxas.
+- `budgets`: cabeçalho, status, escopo, condições e totais do orçamento.
+- `budget_items`: itens calculáveis do orçamento.
+- `budget_status_history`: trilha simples de alterações de status.
+- `settings`: dados padrão da empresa e preferências de orçamento.
+- `budget_exports`: registro opcional de PDFs gerados.
+
+## Comportamento esperado
+
+- A interface deve abrir diretamente no dashboard, sem landing page.
+- Telas com dados devem exibir estados de loading, erro e vazio.
+- CRUDs devem ter busca, filtros relevantes e feedback de sucesso/erro.
+- O dashboard deve usar dados reais do Supabase.
+- O PDF deve refletir os dados salvos e totais calculados.
+- O layout deve ser denso, industrial, responsivo e orientado a produtividade.
+
+## Riscos técnicos
+
+- MVP sem login reduz segurança real se exposto publicamente.
+- RLS precisa ser planejado para não bloquear o MVP e não criar falsa sensação de segurança.
+- Cálculos monetários podem divergir se forem duplicados em vários pontos.
+- PDF no frontend pode ter limitações de layout, performance ou compatibilidade.
+- Relatórios podem ficar lentos se consultas não forem indexadas.
+- Tipos do Supabase podem ficar defasados se não houver rotina de geração.
+
+## Decisões importantes
+
+- Usar Next.js com App Router, TypeScript e Tailwind CSS.
+- Usar Supabase como backend principal.
+- Centralizar chamadas Supabase em services e hooks.
+- Usar Zod para validação e React Hook Form nos formulários.
+- Usar TanStack Query para cache e estados assíncronos.
+- Usar `@react-pdf/renderer` para PDF no frontend no MVP.
+- Preparar `workspace_id` desde o início.
+- Não criar login, checkout, assinatura ou página comercial no MVP.
+
+## Critérios de aceite
+
+- Todos os documentos técnicos obrigatórios existem antes da implementação.
+- O projeto não contém implementação antes da aprovação.
+- Após aprovação, o MVP deve permitir CRUD de clientes, projetos e catálogo.
+- Orçamentos devem ser criados, editados, duplicados, status alterado e PDF gerado.
+- Dashboard e relatórios devem refletir dados do Supabase.
+- Build deve concluir sem erros.
+- A interface deve ser industrial, operacional e responsiva.
+- Não deve haver tela de login ou landing page no MVP.
