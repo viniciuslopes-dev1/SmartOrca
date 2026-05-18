@@ -111,3 +111,51 @@ Profissionais pequenos costumam perder histórico de orçamentos, repetir cálcu
 - Build deve concluir sem erros.
 - A interface deve ser industrial, operacional e responsiva.
 - Não deve haver tela de login ou landing page no MVP.
+
+## Atualização - Autenticação e SaaS multiworkspace
+
+O próximo incremento transforma o MVP sem login em uma aplicação autenticada com Supabase Auth. A nova versão deve manter os módulos existentes, mas adicionar autenticação, sessão persistente e isolamento por workspace.
+
+### Problemas atuais identificados
+
+- Não existem telas `/login`, `/register` ou `/forgot-password`.
+- Todas as rotas operacionais são acessíveis sem sessão.
+- `AppShell` envolve todas as rotas no layout raiz, o que não atende telas públicas de Auth.
+- Services usam `DEFAULT_WORKSPACE_ID` fixo.
+- Não existem tabelas `profiles` e `workspace_members`.
+- `workspaces` ainda não tem `owner_id`.
+- Policies temporárias `mvp_*` permitem acesso do papel `anon` ao workspace padrão.
+
+### Escopo funcional novo
+
+- Login com email e senha via Supabase Auth.
+- Cadastro com nome, email, senha, confirmação, telefone opcional e nome da empresa.
+- Logout.
+- Recuperação de senha por email.
+- Proteção das rotas operacionais.
+- Criação ou conclusão de workspace inicial após autenticação.
+- Isolamento de clientes, obras, catálogo, orçamentos, dashboard e relatórios por workspace.
+
+### Novas entidades
+
+- `profiles`: dados públicos/controlados do usuário autenticado.
+- `workspace_members`: vínculo entre usuários e workspaces com role.
+
+### Regras de negócio adicionais
+
+- Usuário sem login não acessa dados operacionais.
+- Usuário autenticado deve pertencer a um workspace para usar o sistema.
+- Todo registro de negócio deve pertencer ao workspace atual.
+- Usuário não pode ver dados de workspaces em que não é membro.
+- Apenas owner/admin pode alterar configurações sensíveis e gerenciar membros.
+- Policies temporárias do MVP devem ser removidas/substituídas.
+
+### Critérios de aceite adicionais
+
+- Login, cadastro e logout funcionando.
+- Profile criado automaticamente por trigger em `auth.users`.
+- Workspace inicial criado por fluxo autenticado.
+- RLS ativa em todas as tabelas de negócio.
+- Policies usam `authenticated` e membership de workspace.
+- Dashboard e relatórios mostram apenas dados do workspace atual.
+- Usuário B não acessa dados do usuário A.

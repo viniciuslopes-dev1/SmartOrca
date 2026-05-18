@@ -275,3 +275,76 @@ Uso:
 ## Segurança e RLS
 
 Supabase recomenda RLS para tabelas expostas ao browser, especialmente no schema `public`. Como o MVP não terá login, policies definitivas por usuário/workspace ficam planejadas para a fase autenticada. Antes de produção pública, cada tabela deve ter RLS habilitado e policies baseadas em membership de workspace.
+
+## Atualização planejada - Auth e multiworkspace
+
+### Problemas do schema atual
+
+- Falta `profiles`.
+- Falta `workspace_members`.
+- `workspaces` não possui `owner_id`.
+- Existem policies temporárias para workspace fixo.
+- Services usam workspace fixo.
+- Tabelas filhas dependem de relacionamento, mas ainda precisam de policies definitivas.
+
+### `profiles`
+
+Campos planejados:
+
+- `id uuid primary key references auth.users(id) on delete cascade`
+- `full_name text`
+- `email text`
+- `phone text`
+- `avatar_url text`
+- `created_at timestamptz not null default now()`
+- `updated_at timestamptz not null default now()`
+
+Trigger:
+
+- `public.handle_new_user()`
+- `on auth.users after insert`
+- Cria profile usando `new.id`, `new.email` e `new.raw_user_meta_data`.
+
+### `workspaces` ajustes
+
+Adicionar:
+
+- `owner_id uuid references auth.users(id)`
+
+Índices:
+
+- `idx_workspaces_owner_id`
+
+### `workspace_members`
+
+Campos planejados:
+
+- `id uuid primary key default gen_random_uuid()`
+- `workspace_id uuid not null references workspaces(id) on delete cascade`
+- `user_id uuid not null references auth.users(id) on delete cascade`
+- `role text not null check (role in ('owner', 'admin', 'member'))`
+- `created_at timestamptz not null default now()`
+
+Constraints:
+
+- `unique(workspace_id, user_id)`
+
+Índices:
+
+- `idx_workspace_members_workspace_id`
+- `idx_workspace_members_user_id`
+- `idx_workspace_members_role`
+
+### RPC planejada
+
+`public.create_workspace_for_current_user(workspace_name text, phone text default null)`:
+
+- Requer usuário autenticado.
+- Cria workspace com `owner_id = auth.uid()`.
+- Cria membership `owner`.
+- Cria `settings`.
+- Retorna workspace criado.
+
+### Policies
+
+Ver `docs/RLS_POLICIES.md`.

@@ -9,6 +9,18 @@ export type Database = {
         Update: Partial<Omit<Workspace, "id" | "created_at" | "updated_at">>;
         Relationships: [];
       };
+      profiles: {
+        Row: Profile;
+        Insert: Omit<Profile, "created_at" | "updated_at"> & Partial<Pick<Profile, "created_at" | "updated_at">>;
+        Update: Partial<Omit<Profile, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
+      workspace_members: {
+        Row: WorkspaceMember;
+        Insert: Omit<WorkspaceMember, "id" | "created_at"> & Partial<Pick<WorkspaceMember, "id" | "created_at">>;
+        Update: Partial<Omit<WorkspaceMember, "id" | "created_at">>;
+        Relationships: [];
+      };
       clients: {
         Row: Client;
         Insert: Omit<Client, "id" | "created_at" | "updated_at"> & Partial<Pick<Client, "id" | "created_at" | "updated_at">>;
@@ -64,6 +76,10 @@ export type Database = {
         Args: { target_workspace_id: string };
         Returns: number;
       };
+      create_workspace_for_current_user: {
+        Args: { workspace_name: string; workspace_phone?: string | null };
+        Returns: Workspace;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
@@ -71,6 +87,7 @@ export type Database = {
 };
 
 export type PersonType = "individual" | "company";
+export type WorkspaceRole = "owner" | "admin" | "member";
 export type ProjectStatus = "planning" | "estimating" | "waiting_approval" | "approved" | "in_progress" | "finished" | "cancelled";
 export type CatalogItemType = "product" | "service" | "labor" | "material" | "equipment" | "fee_other";
 export type CatalogUnit = "unit" | "m2" | "m3" | "linear_meter" | "hour" | "day" | "kg" | "package" | "other";
@@ -85,8 +102,27 @@ export type Workspace = {
   address: string | null;
   city: string | null;
   state: string | null;
+  owner_id: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type Profile = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkspaceMember = {
+  id: string;
+  workspace_id: string;
+  user_id: string;
+  role: WorkspaceRole;
+  created_at: string;
 };
 
 export type Client = {
@@ -233,4 +269,8 @@ export type ProjectWithClient = Project & {
 export type BudgetListItem = Budget & {
   clients: Pick<Client, "id" | "name"> | null;
   projects: Pick<Project, "id" | "name"> | null;
+};
+
+export type WorkspaceMembership = WorkspaceMember & {
+  workspaces: Workspace | null;
 };

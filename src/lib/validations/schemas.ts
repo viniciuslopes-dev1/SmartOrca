@@ -104,3 +104,36 @@ export type ProjectFormValues = z.infer<typeof projectSchema>;
 export type CatalogItemFormValues = z.infer<typeof catalogItemSchema>;
 export type BudgetFormValues = z.infer<typeof budgetSchema>;
 export type BudgetItemFormValues = z.infer<typeof budgetItemSchema>;
+
+export const loginSchema = z.object({
+  email: z.string().trim().min(1, "Informe o email.").email("Email inválido."),
+  password: z.string().min(1, "Informe a senha.")
+});
+
+export const registerSchema = z
+  .object({
+    full_name: z.string().trim().min(2, "Informe seu nome."),
+    email: z.string().trim().min(1, "Informe o email.").email("Email inválido."),
+    phone: z.string().trim().optional().or(z.literal("")),
+    workspace_name: z.string().trim().min(2, "Informe o nome da empresa/workspace."),
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres."),
+    password_confirmation: z.string().min(8, "Confirme a senha.")
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    path: ["password_confirmation"],
+    message: "As senhas não conferem."
+  });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().min(1, "Informe o email.").email("Email inválido.")
+});
+
+export const workspaceOnboardingSchema = z.object({
+  workspace_name: z.string().trim().min(2, "Informe o nome da empresa/workspace."),
+  phone: z.string().trim().optional().or(z.literal(""))
+});
+
+export type LoginFormValues = z.infer<typeof loginSchema>;
+export type RegisterFormValues = z.infer<typeof registerSchema>;
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+export type WorkspaceOnboardingFormValues = z.infer<typeof workspaceOnboardingSchema>;

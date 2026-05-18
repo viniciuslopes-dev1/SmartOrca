@@ -111,3 +111,40 @@ Validar que o MVP permite criar, organizar, calcular e exportar orçamentos com 
 - Confirmar ausência de erros no console.
 - Confirmar build sem erros.
 - Confirmar que nenhuma tela virou landing page ou marketing.
+
+## Testes de autenticação
+
+1. Abrir `/dashboard` sem sessão e confirmar redirect para `/login`.
+2. Criar conta em `/register`.
+3. Confirmar criação do usuário em Supabase Auth.
+4. Confirmar criação automática em `profiles`.
+5. Confirmar criação/vínculo de workspace inicial.
+6. Fazer login com email/senha.
+7. Confirmar redirect para `/dashboard`.
+8. Atualizar a página e confirmar sessão persistente.
+9. Fazer logout.
+10. Tentar acessar `/clients` deslogado.
+11. Solicitar recuperação de senha.
+12. Testar login com senha inválida.
+13. Testar cadastro com email já existente.
+
+## Testes de isolamento por workspace
+
+1. Criar usuário A.
+2. Criar cliente, obra, item de catálogo e orçamento como usuário A.
+3. Criar usuário B.
+4. Confirmar que usuário B não vê dados do usuário A.
+5. Tentar acessar detalhe por URL direta usando ID do usuário A.
+6. Confirmar bloqueio por RLS.
+7. Confirmar que dashboard do usuário B não soma dados do usuário A.
+8. Confirmar que relatórios do usuário B não incluem dados do usuário A.
+
+## Testes de migrations em banco limpo
+
+1. Rodar schema inicial.
+2. Rodar migration de Auth/SaaS.
+3. Rodar policies reais.
+4. Criar usuário via Auth.
+5. Validar trigger de profile.
+6. Validar criação de workspace inicial.
+7. Validar CRUDs com RLS ativa.

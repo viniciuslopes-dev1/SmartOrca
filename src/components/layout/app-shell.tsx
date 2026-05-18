@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { BarChart3, Boxes, Building2, ClipboardList, FileText, Home, Menu, Settings, Users, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { BarChart3, Boxes, Building2, ClipboardList, FileText, Home, LogOut, Menu, Settings, Users, X } from "lucide-react";
 import { useState } from "react";
+import { LoadingState } from "@/components/feedback/data-state";
 import { cn } from "@/lib/utils";
+import { useSignOut } from "@/hooks/useAuth";
+import { useWorkspaceId } from "@/hooks/useWorkspace";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -18,7 +21,42 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const signOut = useSignOut();
+  const workspace = useWorkspaceId();
+  const isPublicAuthRoute = ["/login", "/register", "/forgot-password"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const isOnboarding = pathname === "/onboarding/workspace";
+
+  if (isPublicAuthRoute || isOnboarding) {
+    return <>{children}</>;
+  }
+
+  if (workspace.isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md">
+          <LoadingState label="Validando sessão e workspace..." />
+        </div>
+      </div>
+    );
+  }
+
+  if (!workspace.workspaceId && !isOnboarding) {
+    router.replace("/onboarding/workspace");
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md">
+          <LoadingState label="Preparando workspace..." />
+        </div>
+      </div>
+    );
+  }
+
+  async function handleSignOut() {
+    await signOut.mutateAsync();
+    router.replace("/login");
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,7 +108,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
           </button>
           <div className="hidden text-sm font-medium text-slate-600 lg:block">Ambiente de orçamento técnico</div>
-          <div className="rounded-md border border-border bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">MVP sem login</div>
+          <div className="flex items-center gap-2">
+            <div className="hidden rounded-md border border-border bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600 md:block">
+              {workspace.currentWorkspace?.name ?? "Workspace"}
+            </div>
+            <button
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              onClick={handleSignOut}
+              disabled={signOut.isPending}
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </button>
+          </div>
         </header>
         <main className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6">{children}</main>
       </div>

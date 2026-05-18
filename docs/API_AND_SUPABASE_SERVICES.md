@@ -19,22 +19,25 @@ Responsabilidades:
 - Criar client tipado com `Database`.
 - Nunca usar `service_role`.
 
-## Workspace temporário
+## Workspace autenticado
 
-Arquivo previsto:
+O sistema autenticado não deve usar workspace fixo no frontend. O workspace atual vem de `workspace_members`, carregado por `workspace.service.ts` e `useWorkspace.ts`.
 
 ```txt
-src/lib/constants/workspace.ts
+src/services/workspace.service.ts
+src/hooks/useWorkspace.ts
 ```
 
 Responsabilidades:
 
-- Centralizar `DEFAULT_WORKSPACE_ID`.
-- Facilitar remoção futura quando houver Auth.
+- Listar workspaces do usuário autenticado.
+- Selecionar o workspace atual.
+- Criar workspace inicial via RPC autenticada.
+- Fornecer `workspaceId` para services de negócio.
 
 ## Padrão de resposta
 
-Services devem retornar dados ou lançar erro normalizado.
+Services devem retornar dados ou lançar erro normalizado. Services de negócio recebem `workspaceId` explicitamente e o banco reforça isolamento via RLS.
 
 Formato lógico de erro:
 

@@ -93,3 +93,37 @@ Decisão: versionar schema em `supabase/migrations/`.
 Motivo: migrations tornam mudanças auditáveis e reproduzíveis entre ambiente local e remoto.
 
 Referência: https://supabase.com/docs/guides/deployment/database-migrations
+
+## ADR-009 - Supabase Auth com SSR no Next.js
+
+Status: proposto.
+
+Decisão: usar Supabase Auth com `@supabase/ssr`, browser/server clients e proxy de sessão.
+
+Motivo: a documentação atual do Supabase para Next.js recomenda clientes configurados com cookies e um proxy para atualizar tokens e disponibilizar sessão para server/client components. Isso é mais seguro e consistente que proteger rotas apenas com guard client-side.
+
+Consequências: será necessário reorganizar rotas em layouts públicos e protegidos, criar `src/proxy.ts` e ajustar o client Supabase existente.
+
+Referência: https://supabase.com/docs/guides/auth/server-side/nextjs
+
+## ADR-010 - Workspace criado após sessão autenticada
+
+Status: proposto.
+
+Decisão: cadastro coleta nome da empresa, mas o workspace inicial será criado após sessão autenticada, com onboarding/fallback.
+
+Motivo: Supabase pode exigir confirmação de email e não retornar sessão imediata após `signUp`. Criar workspace depois do login evita usar `service_role` no frontend e mantém RLS funcionando com `auth.uid()`.
+
+Consequências: `/register` deve salvar `workspace_name` em metadata. Após login, se não houver membership, o usuário é enviado para `/onboarding/workspace`.
+
+## ADR-011 - RLS por membership de workspace
+
+Status: proposto.
+
+Decisão: substituir policies temporárias `mvp_*` por policies `to authenticated` baseadas em `workspace_members`.
+
+Motivo: o MVP atual permite acesso anon ao workspace fixo e não isola usuários reais. SaaS multiworkspace exige que cada operação seja autorizada pelo vínculo do usuário ao workspace.
+
+Consequências: todos os services precisam usar workspace atual, e o banco precisa proteger também tabelas filhas como `budget_items` e `budget_status_history`.
+
+Referência: https://supabase.com/docs/guides/database/postgres/row-level-security

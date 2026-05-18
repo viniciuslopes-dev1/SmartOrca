@@ -1,4 +1,3 @@
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants/workspace";
 import { asNumber } from "@/lib/formatters";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeSupabaseError } from "@/services/service-error";
@@ -17,22 +16,22 @@ export type DashboardMetrics = {
   approvalRate: number;
 };
 
-export async function getDashboardData() {
+export async function getDashboardData(workspaceId: string) {
   const supabase = getSupabaseClient();
   const [clients, projects, budgets, recentBudgets, recentProjects] = await Promise.all([
-    supabase.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", DEFAULT_WORKSPACE_ID),
-    supabase.from("projects").select("id", { count: "exact", head: true }).eq("workspace_id", DEFAULT_WORKSPACE_ID),
-    supabase.from("budgets").select("status,total").eq("workspace_id", DEFAULT_WORKSPACE_ID),
+    supabase.from("clients").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("workspace_id", workspaceId),
+    supabase.from("budgets").select("status,total").eq("workspace_id", workspaceId),
     supabase
       .from("budgets")
       .select("*, clients(id, name), projects(id, name)")
-      .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+      .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false })
       .limit(6),
     supabase
       .from("projects")
       .select("*, clients(id, name)")
-      .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+      .eq("workspace_id", workspaceId)
       .order("created_at", { ascending: false })
       .limit(6)
   ]);
@@ -66,11 +65,11 @@ export async function getDashboardData() {
   };
 }
 
-export async function getReportsData() {
+export async function getReportsData(workspaceId: string) {
   const supabase = getSupabaseClient();
   const [budgets, items] = await Promise.all([
-    supabase.from("budgets").select("*, clients(id, name), projects(id, name)").eq("workspace_id", DEFAULT_WORKSPACE_ID),
-    supabase.from("budget_items").select("name, quantity, subtotal, budgets!inner(workspace_id)").eq("budgets.workspace_id", DEFAULT_WORKSPACE_ID)
+    supabase.from("budgets").select("*, clients(id, name), projects(id, name)").eq("workspace_id", workspaceId),
+    supabase.from("budget_items").select("name, quantity, subtotal, budgets!inner(workspace_id)").eq("budgets.workspace_id", workspaceId)
   ]);
 
   if (budgets.error) throw normalizeSupabaseError(budgets.error);

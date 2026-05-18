@@ -77,3 +77,24 @@
 - [ ] Console do navegador sem erros.
 - [ ] Estados loading, erro e vazio aparecem.
 - [ ] UI continua industrial e sem aparência promocional.
+
+## Autenticação
+
+- [ ] `/login` renderiza sem `AppShell`.
+- [ ] `/register` renderiza sem `AppShell`.
+- [ ] `/forgot-password` renderiza sem `AppShell`.
+- [ ] Usuário deslogado não acessa dashboard.
+- [ ] Usuário logado não volta para login.
+- [ ] Logout remove sessão.
+- [ ] Refresh mantém sessão.
+- [ ] Loading inicial não mostra dados antes de validar sessão.
+
+## Isolamento
+
+- [ ] Services usam workspace atual.
+- [ ] Dashboard filtra pelo workspace atual.
+- [ ] Relatórios filtram pelo workspace atual.
+- [ ] Clientes não vazam entre usuários.
+- [ ] Obras não vazam entre usuários.
+- [ ] Catálogo não vaza entre usuários.
+- [ ] Orçamentos e itens não vazam entre usuários.

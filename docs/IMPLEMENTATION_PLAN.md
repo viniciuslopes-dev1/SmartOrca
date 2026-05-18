@@ -115,3 +115,40 @@
 - Revisar textos operacionais.
 - Revisar acessibilidade básica.
 - Revisar documentação se houver mudanças relevantes.
+
+## 15. Autenticação Supabase Auth
+
+- Instalar `@supabase/ssr`.
+- Criar clients Supabase browser/server.
+- Criar proxy de sessão.
+- Criar route groups `(auth)` e `(app)`.
+- Mover rotas operacionais para layout protegido.
+- Criar telas `/login`, `/register` e `/forgot-password`.
+- Criar services/hooks de autenticação.
+- Criar logout no `AppShell`.
+
+## 16. Modelagem SaaS
+
+- Criar migration para `profiles`.
+- Adicionar `owner_id` em `workspaces`.
+- Criar `workspace_members`.
+- Criar trigger `handle_new_user` para profile.
+- Criar RPC segura para workspace inicial.
+- Atualizar índices e constraints.
+- Remover ou substituir policies temporárias `mvp_*`.
+
+## 17. RLS real por workspace
+
+- Ativar RLS em todas as tabelas obrigatórias.
+- Criar policies `to authenticated`.
+- Criar funções auxiliares em schema não exposto.
+- Proteger tabelas filhas por relacionamento com orçamento/workspace.
+- Testar isolamento com dois usuários.
+
+## 18. Ajuste dos módulos existentes para workspace atual
+
+- Atualizar services para receber `workspaceId`.
+- Atualizar hooks para usar `useWorkspace`.
+- Ajustar dashboard e relatórios.
+- Remover dependência de `NEXT_PUBLIC_DEFAULT_WORKSPACE_ID`.
+- Garantir estados de loading quando workspace ainda está carregando.

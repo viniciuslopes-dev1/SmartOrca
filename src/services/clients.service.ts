@@ -1,4 +1,3 @@
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants/workspace";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeSupabaseError } from "@/services/service-error";
 import type { Client, Database } from "@/types/database.types";
@@ -6,9 +5,9 @@ import type { Client, Database } from "@/types/database.types";
 type ClientInsert = Database["public"]["Tables"]["clients"]["Insert"];
 type ClientUpdate = Database["public"]["Tables"]["clients"]["Update"];
 
-export async function listClients(search = "") {
+export async function listClients(workspaceId: string, search = "") {
   const supabase = getSupabaseClient();
-  let query = supabase.from("clients").select("*").eq("workspace_id", DEFAULT_WORKSPACE_ID).order("created_at", { ascending: false });
+  let query = supabase.from("clients").select("*").eq("workspace_id", workspaceId).order("created_at", { ascending: false });
 
   if (search.trim()) {
     const term = `%${search.trim()}%`;
@@ -20,30 +19,30 @@ export async function listClients(search = "") {
   return data ?? [];
 }
 
-export async function getClientById(id: string) {
+export async function getClientById(workspaceId: string, id: string) {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from("clients").select("*").eq("workspace_id", DEFAULT_WORKSPACE_ID).eq("id", id).single();
+  const { data, error } = await supabase.from("clients").select("*").eq("workspace_id", workspaceId).eq("id", id).single();
   if (error) throw normalizeSupabaseError(error);
   return data;
 }
 
-export async function createClient(input: Omit<ClientInsert, "workspace_id">) {
+export async function createClient(workspaceId: string, input: Omit<ClientInsert, "workspace_id">) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("clients")
-    .insert({ ...input, workspace_id: DEFAULT_WORKSPACE_ID })
+    .insert({ ...input, workspace_id: workspaceId })
     .select()
     .single();
   if (error) throw normalizeSupabaseError(error);
   return data;
 }
 
-export async function updateClient(id: string, input: ClientUpdate) {
+export async function updateClient(workspaceId: string, id: string, input: ClientUpdate) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("clients")
     .update(input)
-    .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+    .eq("workspace_id", workspaceId)
     .eq("id", id)
     .select()
     .single();
@@ -51,15 +50,15 @@ export async function updateClient(id: string, input: ClientUpdate) {
   return data;
 }
 
-export async function deactivateClient(id: string) {
-  return updateClient(id, { is_active: false });
+export async function deactivateClient(workspaceId: string, id: string) {
+  return updateClient(workspaceId, id, { is_active: false });
 }
 
-export async function getClientRelations(id: string) {
+export async function getClientRelations(workspaceId: string, id: string) {
   const supabase = getSupabaseClient();
   const [projects, budgets] = await Promise.all([
-    supabase.from("projects").select("*").eq("workspace_id", DEFAULT_WORKSPACE_ID).eq("client_id", id).order("created_at", { ascending: false }),
-    supabase.from("budgets").select("*").eq("workspace_id", DEFAULT_WORKSPACE_ID).eq("client_id", id).order("created_at", { ascending: false })
+    supabase.from("projects").select("*").eq("workspace_id", workspaceId).eq("client_id", id).order("created_at", { ascending: false }),
+    supabase.from("budgets").select("*").eq("workspace_id", workspaceId).eq("client_id", id).order("created_at", { ascending: false })
   ]);
 
   if (projects.error) throw normalizeSupabaseError(projects.error);

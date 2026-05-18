@@ -190,3 +190,74 @@ O MVP usará `@react-pdf/renderer` no frontend. O documento será gerado a parti
 - Validar inputs no frontend e reforçar constraints no banco.
 - Preparar políticas RLS por `workspace_id` para fase com Auth.
 - Documentar limitação do MVP sem login.
+
+## Atualização técnica - Supabase Auth
+
+### Dependência nova planejada
+
+- Adicionar `@supabase/ssr` para clientes browser/server com cookies.
+
+### Supabase clients planejados
+
+```txt
+src/lib/supabase/browser.ts
+src/lib/supabase/server.ts
+src/lib/supabase/proxy.ts
+src/proxy.ts
+```
+
+O browser client será usado por componentes client-side. O server client/proxy será usado para refresh de sessão e proteção de rotas no App Router.
+
+### Arquitetura de rotas
+
+Separar layouts por route groups:
+
+```txt
+src/app/(auth)/layout.tsx
+src/app/(auth)/login/page.tsx
+src/app/(auth)/register/page.tsx
+src/app/(auth)/forgot-password/page.tsx
+src/app/(app)/layout.tsx
+src/app/(app)/dashboard/page.tsx
+...
+```
+
+O layout protegido `(app)` renderiza `AppShell`. O layout público `(auth)` usa tela centralizada industrial, sem sidebar.
+
+### Services e hooks novos
+
+- `auth.service.ts`: login, cadastro, logout, recuperação de senha.
+- `profile.service.ts`: profile do usuário atual.
+- `workspace.service.ts`: listar workspaces, workspace atual e criação inicial.
+- `useAuth.ts`: sessão, usuário, loading e ações.
+- `useWorkspace.ts`: workspace selecionado e membership.
+
+### Ajuste dos services existentes
+
+Remover `DEFAULT_WORKSPACE_ID` como fonte de verdade. Cada service deve receber `workspaceId` validado pelo hook de workspace:
+
+```ts
+listClients(workspaceId, search)
+createClient(workspaceId, input)
+```
+
+As queries continuam filtrando `workspace_id` explicitamente por performance, mas RLS será a proteção real.
+
+### Validações novas
+
+- Login: email obrigatório, email válido, senha obrigatória.
+- Cadastro: nome obrigatório, email válido, senha mínima, confirmação igual, workspace obrigatório.
+- Workspace onboarding: nome obrigatório.
+
+### Tipagem nova
+
+Atualizar `database.types.ts` para incluir:
+
+- `Profile`
+- `WorkspaceMember`
+- `WorkspaceRole`
+- `WorkspaceWithMembership`
+
+### Estratégia de proteção
+
+Usar proxy/server verification para rotas privadas e guard client-side apenas como complemento visual de loading. Decisão registrada em `ADR.md`.

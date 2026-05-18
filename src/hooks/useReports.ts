@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useWorkspaceId } from "@/hooks/useWorkspace";
 import { getDashboardData, getReportsData } from "@/services/reports.service";
 
 export function useDashboardData() {
-  return useQuery({ queryKey: ["dashboard"], queryFn: getDashboardData });
+  const { workspaceId } = useWorkspaceId();
+  return useQuery({ queryKey: ["dashboard", workspaceId], queryFn: () => getDashboardData(workspaceId as string), enabled: Boolean(workspaceId) });
 }
 
 export function useReportsData() {
-  return useQuery({ queryKey: ["reports"], queryFn: getReportsData });
+  const { workspaceId } = useWorkspaceId();
+  return useQuery({ queryKey: ["reports", workspaceId], queryFn: () => getReportsData(workspaceId as string), enabled: Boolean(workspaceId) });
 }

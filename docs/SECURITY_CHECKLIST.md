@@ -74,3 +74,25 @@
 - [ ] Revisar políticas com usuário comum.
 - [ ] Testar tentativas de acesso entre workspaces.
 - [ ] Revisar variáveis de ambiente no deploy.
+
+## Supabase Auth
+
+- [ ] Criar `/login`, `/register` e `/forgot-password`.
+- [ ] Usar `@supabase/ssr` para sessão com cookies.
+- [ ] Proteger rotas privadas no proxy/server side.
+- [ ] Redirecionar usuário autenticado para dashboard ao acessar login/cadastro.
+- [ ] Redirecionar usuário sem workspace para onboarding.
+- [ ] Implementar logout real com `supabase.auth.signOut`.
+- [ ] Limpar cache do TanStack Query no logout.
+
+## RLS real
+
+- [ ] Criar `profiles`.
+- [ ] Criar `workspace_members`.
+- [ ] Adicionar `owner_id` em `workspaces`.
+- [ ] Remover policies temporárias `mvp_*`.
+- [ ] Não permitir `anon` em tabelas de negócio.
+- [ ] Criar policies `to authenticated`.
+- [ ] Usar membership de workspace em `select`, `insert`, `update` e `delete`.
+- [ ] Testar usuário B tentando acessar dados do usuário A.
+- [ ] Criar funções auxiliares em schema não exposto.

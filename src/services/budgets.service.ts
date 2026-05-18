@@ -1,5 +1,4 @@
 import { calculateBudgetTotals, calculateItemMargin, calculateItemSubtotal } from "@/lib/calculations/budget";
-import { DEFAULT_WORKSPACE_ID } from "@/lib/constants/workspace";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeSupabaseError } from "@/services/service-error";
 import type { Budget, BudgetItem, BudgetListItem, BudgetStatus, BudgetWithRelations, Database } from "@/types/database.types";
@@ -16,12 +15,12 @@ export type SaveBudgetInput = Omit<
   items: Omit<BudgetItemInsert, "id" | "budget_id" | "subtotal" | "margin" | "sort_order" | "created_at" | "updated_at">[];
 };
 
-export async function listBudgets(params: { search?: string; status?: BudgetStatus | "all" } = {}) {
+export async function listBudgets(workspaceId: string, params: { search?: string; status?: BudgetStatus | "all" } = {}) {
   const supabase = getSupabaseClient();
   let query = supabase
     .from("budgets")
     .select("*, clients(id, name), projects(id, name)")
-    .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+    .eq("workspace_id", workspaceId)
     .order("created_at", { ascending: false });
 
   if (params.search?.trim()) {
@@ -36,12 +35,12 @@ export async function listBudgets(params: { search?: string; status?: BudgetStat
   return (data ?? []) as unknown as BudgetListItem[];
 }
 
-export async function getBudgetById(id: string) {
+export async function getBudgetById(workspaceId: string, id: string) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("budgets")
     .select("*, clients(*), projects(*), budget_items(*)")
-    .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+    .eq("workspace_id", workspaceId)
     .eq("id", id)
     .single();
   if (error) throw normalizeSupabaseError(error);
@@ -50,21 +49,21 @@ export async function getBudgetById(id: string) {
   return budget;
 }
 
-export async function createBudget(input: SaveBudgetInput) {
+export async function createBudget(workspaceId: string, input: SaveBudgetInput) {
   const supabase = getSupabaseClient();
   const totals = calculateBudgetTotals({
     items: input.items,
     discount_total: input.discount_total,
     tax_total: input.tax_total
   });
-  const budgetNumber = input.budget_number ?? (await getNextBudgetNumber());
+  const budgetNumber = input.budget_number ?? (await getNextBudgetNumber(workspaceId));
   const { items, ...budgetInput } = input;
 
   const { data: budget, error } = await supabase
     .from("budgets")
     .insert({
       ...budgetInput,
-      workspace_id: DEFAULT_WORKSPACE_ID,
+      workspace_id: workspaceId,
       budget_number: budgetNumber,
       subtotal: totals.subtotal,
       discount_total: totals.discount_total,
@@ -78,17 +77,17 @@ export async function createBudget(input: SaveBudgetInput) {
 
   await replaceBudgetItems(budget.id, items);
   await recordStatusHistory(budget.id, null, budget.status);
-  return getBudgetById(budget.id);
+  return getBudgetById(workspaceId, budget.id);
 }
 
-export async function updateBudget(id: string, input: SaveBudgetInput) {
+export async function updateBudget(workspaceId: string, id: string, input: SaveBudgetInput) {
   const supabase = getSupabaseClient();
   const totals = calculateBudgetTotals({
     items: input.items,
     discount_total: input.discount_total,
     tax_total: input.tax_total
   });
-  const current = await getBudgetById(id);
+  const current = await getBudgetById(workspaceId, id);
   const { items, budget_number: _budgetNumber, ...budgetInput } = input;
 
   const { data, error } = await supabase
@@ -101,7 +100,7 @@ export async function updateBudget(id: string, input: SaveBudgetInput) {
       margin_total: totals.margin_total,
       total: totals.total
     } satisfies BudgetUpdate)
-    .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+    .eq("workspace_id", workspaceId)
     .eq("id", id)
     .select()
     .single();
@@ -109,16 +108,16 @@ export async function updateBudget(id: string, input: SaveBudgetInput) {
 
   await replaceBudgetItems(id, items);
   if (current.status !== data.status) await recordStatusHistory(id, current.status, data.status);
-  return getBudgetById(id);
+  return getBudgetById(workspaceId, id);
 }
 
-export async function changeBudgetStatus(id: string, status: BudgetStatus, notes?: string) {
+export async function changeBudgetStatus(workspaceId: string, id: string, status: BudgetStatus, notes?: string) {
   const supabase = getSupabaseClient();
-  const current = await getBudgetById(id);
+  const current = await getBudgetById(workspaceId, id);
   const { data, error } = await supabase
     .from("budgets")
     .update({ status })
-    .eq("workspace_id", DEFAULT_WORKSPACE_ID)
+    .eq("workspace_id", workspaceId)
     .eq("id", id)
     .select()
     .single();
@@ -127,9 +126,9 @@ export async function changeBudgetStatus(id: string, status: BudgetStatus, notes
   return data;
 }
 
-export async function duplicateBudget(id: string) {
-  const budget = await getBudgetById(id);
-  return createBudget({
+export async function duplicateBudget(workspaceId: string, id: string) {
+  const budget = await getBudgetById(workspaceId, id);
+  return createBudget(workspaceId, {
     client_id: budget.client_id,
     project_id: budget.project_id,
     title: `${budget.title} (cópia)`,
@@ -171,9 +170,9 @@ export async function getBudgetStatusHistory(id: string) {
   return data ?? [];
 }
 
-async function getNextBudgetNumber() {
+async function getNextBudgetNumber(workspaceId: string) {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.rpc("next_budget_number", { target_workspace_id: DEFAULT_WORKSPACE_ID });
+  const { data, error } = await supabase.rpc("next_budget_number", { target_workspace_id: workspaceId });
   if (error) throw normalizeSupabaseError(error);
   return data;
 }
