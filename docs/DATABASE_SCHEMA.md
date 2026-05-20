@@ -348,3 +348,68 @@ Constraints:
 ### Policies
 
 Ver `docs/RLS_POLICIES.md`.
+
+## Atualização planejada - Grupos de orçamento
+
+### Motivo
+
+O orçamento atual salva itens em uma lista plana. Para representar a lógica real observada na planilha do cliente, será adicionada uma entidade de grupos/seções entre `budgets` e `budget_items`.
+
+### `budget_groups`
+
+Campos planejados:
+
+- `id uuid primary key default gen_random_uuid()`
+- `budget_id uuid not null references budgets(id) on delete cascade`
+- `name text not null`
+- `type text not null default 'service'`
+- `sort_order integer not null default 0`
+- `subtotal numeric(14,2) not null default 0`
+- `notes text`
+- `created_at timestamptz not null default now()`
+- `updated_at timestamptz not null default now()`
+
+Tipos permitidos:
+
+- `labor`
+- `material`
+- `service`
+- `product`
+- `stage`
+- `other`
+
+Constraints:
+
+- `check (length(trim(name)) >= 1)`
+- `check (type in ('labor', 'material', 'service', 'product', 'stage', 'other'))`
+- `check (sort_order >= 0)`
+- `check (subtotal >= 0)`
+
+Índices:
+
+- `idx_budget_groups_budget_id`
+- `idx_budget_groups_sort_order`
+
+### Ajuste em `budget_items`
+
+Adicionar:
+
+- `group_id uuid references budget_groups(id) on delete cascade`
+
+Índice:
+
+- `idx_budget_items_group_id`
+
+Compatibilidade:
+
+- `group_id` deve começar como nullable para não quebrar itens antigos.
+- Orçamentos antigos sem grupos serão normalizados pela aplicação em um grupo padrão.
+- Em novo salvamento, os itens antigos podem ser migrados para um grupo persistido.
+
+### Segurança
+
+`budget_groups` não terá `workspace_id`; o workspace será inferido por `budgets.workspace_id`. As policies RLS devem usar `exists` contra `budgets` e `workspace_members`, igual ao padrão das tabelas filhas.
+
+### Observação sobre migration
+
+A migration deverá ser nova e idempotente, sem alterar ou apagar dados existentes. Ela não deve tentar recriar `budget_items` nem `budgets`.

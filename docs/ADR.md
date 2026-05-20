@@ -127,3 +127,39 @@ Motivo: o MVP atual permite acesso anon ao workspace fixo e não isola usuários
 Consequências: todos os services precisam usar workspace atual, e o banco precisa proteger também tabelas filhas como `budget_items` e `budget_status_history`.
 
 Referência: https://supabase.com/docs/guides/database/postgres/row-level-security
+
+## ADR-012 - Orçamentos com grupos/seções
+
+Status: proposto.
+
+Decisão: adicionar uma entidade `budget_groups` entre `budgets` e `budget_items`, em vez de simular grupos apenas com `category`, `type` ou linhas especiais dentro de `budget_items`.
+
+Motivo: a planilha analisada mostra que o orçamento real é organizado por blocos operacionais, como mão de obra, materiais, serviços, setores ou etapas. Usar uma tabela própria permite subtotal por grupo, ordenação, observações e evolução futura sem transformar a tela em réplica de Excel.
+
+Consequências:
+
+- `budget_items` passará a ter `group_id` opcional durante a transição.
+- Orçamentos antigos sem grupo serão exibidos em um grupo padrão de compatibilidade.
+- Services e tipos precisam carregar `budget_groups` junto dos itens.
+- PDF e visualização precisam renderizar grupos e subtotais.
+- RLS de `budget_groups` será baseada no orçamento pai e workspace.
+
+Alternativas rejeitadas:
+
+- Copiar a planilha visualmente: rejeitado porque manteria limitações do Excel e pioraria a experiência web.
+- Usar apenas `catalog_items.category`: rejeitado porque categoria do catálogo não representa necessariamente etapa, composição ou grupo de venda do orçamento.
+- Guardar grupos em JSON dentro de `budgets`: rejeitado porque dificultaria consultas, RLS, relatórios e manutenção.
+
+## ADR-013 - Fórmula de preço da planilha como evolução futura
+
+Status: proposto.
+
+Decisão: neste incremento, manter a regra atual do sistema para subtotal (`quantidade * valor_unitário - desconto`) e estruturar os grupos. A fórmula da planilha com indiretos e lucro por dentro deve ser tratada como evolução separada.
+
+Motivo: o pedido atual prioriza transformar a lógica organizacional da planilha em fluxo nativo. Alterar simultaneamente a precificação poderia quebrar orçamentos existentes, PDF, relatórios e expectativas já implementadas.
+
+Consequências:
+
+- O sistema ganha separação por mão de obra, materiais e serviços agora.
+- Campos como percentual de indiretos, lucro e composição de preço podem ser planejados depois com testes específicos.
+- A análise da planilha fica registrada para orientar essa evolução.

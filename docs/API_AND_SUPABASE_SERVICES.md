@@ -217,3 +217,49 @@ Referência: https://supabase.com/docs/guides/api/rest/generating-types
 - Erros de validação ficam no formulário.
 - Erros inesperados podem aparecer como alerta operacional genérico.
 - Não mostrar stack trace ao usuário.
+
+## Atualização planejada - Services para orçamento agrupado
+
+### `budgets.service.ts`
+
+O service deverá passar a tratar orçamento em três níveis:
+
+- `budgets`: cabeçalho, status, totais e escopos.
+- `budget_groups`: seções do orçamento.
+- `budget_items`: itens internos de cada grupo.
+
+Operações ajustadas:
+
+- `getBudgetById(workspaceId, id)` deve carregar `budget_groups` ordenados por `sort_order` e seus itens internos.
+- `createBudget(workspaceId, input)` deve criar cabeçalho, grupos e itens.
+- `updateBudget(workspaceId, id, input)` deve atualizar cabeçalho e persistir grupos/itens.
+- `duplicateBudget(workspaceId, id)` deve duplicar grupos e itens preservando a ordem.
+
+### Formato de entrada planejado
+
+```ts
+type SaveBudgetGroupInput = {
+  id?: string;
+  name: string;
+  type: "labor" | "material" | "service" | "product" | "stage" | "other";
+  sort_order?: number;
+  notes?: string | null;
+  items: SaveBudgetItemInput[];
+};
+```
+
+`SaveBudgetInput` deve receber `groups: SaveBudgetGroupInput[]`.
+
+### Compatibilidade com dados antigos
+
+Se `getBudgetById` retornar `budget_items` sem `budget_groups`, o service ou mapper deverá expor um grupo sintético:
+
+- `name`: "Itens do orçamento"
+- `type`: "service"
+- `items`: itens antigos ordenados por `sort_order`
+
+Esse grupo sintético só será persistido quando o usuário salvar novamente.
+
+### Relatórios
+
+Relatórios podem continuar usando `budgets.total` e `budget_items` para itens mais usados. Quando necessário, consultas futuras podem agregar por `budget_groups.type`.

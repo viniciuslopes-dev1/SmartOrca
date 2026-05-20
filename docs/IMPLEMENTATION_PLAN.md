@@ -152,3 +152,55 @@
 - Ajustar dashboard e relatórios.
 - Remover dependência de `NEXT_PUBLIC_DEFAULT_WORKSPACE_ID`.
 - Garantir estados de loading quando workspace ainda está carregando.
+
+## 19. Novo fluxo de orçamento por grupos
+
+### 19.1 Preparação técnica
+
+- Confirmar a migration de Auth/RLS em ambiente limpo antes de adicionar nova migration.
+- Criar migration segura para `budget_groups` e `budget_items.group_id`.
+- Atualizar `database.types.ts`.
+- Atualizar documentação de RLS para incluir `budget_groups`.
+
+### 19.2 Cálculos e validações
+
+- Criar helpers de subtotal por grupo em `src/lib/calculations/budget.ts`.
+- Atualizar Zod para validar `groups[]` e `groups[].items[]`.
+- Garantir que orçamento sem grupos ou sem itens mostre erro amigável.
+- Garantir que valores inválidos não gerem `NaN`.
+
+### 19.3 Services e mappers
+
+- Atualizar `SaveBudgetInput` para receber grupos.
+- Atualizar `getBudgetById` para carregar `budget_groups` com itens.
+- Criar mapper de compatibilidade para orçamentos antigos com itens sem grupo.
+- Atualizar criação, edição e duplicação de orçamento para persistir grupos.
+
+### 19.4 Interface
+
+- Refatorar `BudgetForm` em componentes menores.
+- Adicionar criação, edição e remoção de grupos.
+- Adicionar itens dentro do grupo.
+- Exibir subtotal por grupo e total geral.
+- Manter seleção de item do catálogo.
+- Ajustar visualização de orçamento.
+- Ajustar PDF para renderizar grupos.
+
+### 19.5 Testes e regressão
+
+- Testar orçamento novo com mão de obra.
+- Testar orçamento com mão de obra, materiais e serviços.
+- Testar edição de quantidades, valores, descontos, grupos e itens.
+- Testar orçamento antigo sem grupos.
+- Testar PDF e visualização.
+- Rodar typecheck, lint e build.
+
+## 20. Importação de Excel para catálogo
+
+- Adicionar dependência de leitura de planilha.
+- Criar parser flexível de cabeçalhos.
+- Criar tela `/catalog/import`.
+- Criar prévia de itens detectados.
+- Criar mutation de importação em lote.
+- Adicionar botão "Importar Excel" no catálogo.
+- Testar com a planilha do cliente e com cabeçalhos alternativos.

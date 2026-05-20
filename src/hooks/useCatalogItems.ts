@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createCatalogItem, deactivateCatalogItem, getCatalogItemById, listCatalogItems, updateCatalogItem } from "@/services/catalog.service";
+import { createCatalogItem, deactivateCatalogItem, getCatalogItemById, importCatalogItems, listCatalogItems, updateCatalogItem } from "@/services/catalog.service";
 import { useWorkspaceId } from "@/hooks/useWorkspace";
 import type { CatalogItemType } from "@/types/database.types";
 
@@ -39,6 +39,15 @@ export function useDeactivateCatalogItem() {
   const { workspaceId } = useWorkspaceId();
   return useMutation({
     mutationFn: (id: string) => deactivateCatalogItem(workspaceId as string, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["catalog-items"] })
+  });
+}
+
+export function useImportCatalogItems() {
+  const queryClient = useQueryClient();
+  const { workspaceId } = useWorkspaceId();
+  return useMutation({
+    mutationFn: (items: Parameters<typeof importCatalogItems>[1]) => importCatalogItems(workspaceId as string, items),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["catalog-items"] })
   });
 }

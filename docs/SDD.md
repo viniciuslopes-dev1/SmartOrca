@@ -159,3 +159,96 @@ O próximo incremento transforma o MVP sem login em uma aplicação autenticada 
 - Policies usam `authenticated` e membership de workspace.
 - Dashboard e relatórios mostram apenas dados do workspace atual.
 - Usuário B não acessa dados do usuário A.
+
+## Atualização - Orçamento por grupos baseado na planilha analisada
+
+### Situação atual encontrada no código
+
+O módulo de orçamento já permite criar, editar, duplicar, visualizar e gerar PDF de orçamentos. A estrutura atual, porém, trabalha com uma lista única de `budget_items`, sem separação nativa por seções. O formulário `BudgetForm` usa `items[]`, o service `budgets.service.ts` salva os itens em `budget_items`, e os cálculos em `lib/calculations/budget.ts` somam todos os itens diretamente.
+
+### Aprendizado aproveitado da planilha do cliente
+
+A planilha enviada mostra que o orçamento real de obra não é apenas uma lista simples. Ela separa serviços por setor/categoria, usa unidades variadas, calcula subtotal por quantidade e valor unitário, e organiza o total por grupos como elétrica, hidráulica, civil, pintura, drywall, revestimentos e limpeza. A lógica útil para o sistema é a separação operacional por grupos, não o layout do Excel.
+
+### Novo fluxo funcional
+
+O usuário deverá montar um orçamento em camadas:
+
+1. Dados gerais do orçamento.
+2. Grupos ou seções do orçamento.
+3. Itens dentro de cada grupo.
+4. Subtotal por grupo.
+5. Total geral do orçamento.
+
+Grupos esperados no MVP:
+
+- Mão de obra.
+- Materiais.
+- Serviços.
+- Produtos.
+- Etapa da obra.
+- Outros.
+
+Cada grupo poderá representar uma categoria operacional, uma etapa da obra ou um agrupamento livre definido pelo usuário.
+
+### Regras de negócio novas
+
+- Todo orçamento deve ter ao menos um grupo com ao menos um item para ser salvo.
+- Cada item pertence a um grupo.
+- O subtotal do item é calculado por `quantidade * valor_unitario - desconto`.
+- O subtotal do grupo é a soma dos subtotais dos itens daquele grupo.
+- O subtotal do orçamento é a soma dos subtotais dos grupos.
+- Desconto total e taxas do orçamento continuam sendo aplicados no cabeçalho do orçamento.
+- Itens antigos sem grupo devem ser tratados como compatibilidade em um grupo padrão chamado "Itens do orçamento".
+- O usuário pode adicionar, editar, remover e reordenar grupos e itens.
+- A tela não deve copiar a planilha nem parecer Excel; a planilha serve apenas como referência de lógica.
+
+### Comportamento esperado
+
+- Ao abrir um orçamento antigo, o sistema exibe os itens existentes dentro de um grupo padrão sem perda de dados.
+- Ao criar um orçamento novo, o sistema sugere um primeiro grupo, por exemplo "Mão de obra" ou "Serviços".
+- Ao selecionar item de catálogo, o sistema pode sugerir o grupo pelo tipo do item, mas o usuário pode alterar.
+- Ao alterar quantidade, valor unitário ou desconto, o subtotal do item, do grupo e do orçamento é recalculado imediatamente.
+- Ao remover um grupo, o sistema pede confirmação porque todos os itens internos serão removidos.
+
+### Riscos e cuidados
+
+- Migration deve preservar `budget_items` existentes.
+- RLS deve proteger `budget_groups` pelo orçamento pai e workspace.
+- PDF, visualização e relatórios precisam continuar funcionando com orçamentos antigos e novos.
+- A atualização deve evitar duplicar regra de cálculo em JSX.
+
+### Critérios de aceite do incremento
+
+- Criar orçamento com múltiplos grupos.
+- Criar grupo de mão de obra e adicionar itens internos.
+- Criar grupos de materiais e serviços.
+- Calcular subtotal por item, por grupo e total geral.
+- Editar e remover itens sem quebrar totais.
+- Remover grupos com confirmação.
+- Salvar e reabrir orçamento preservando grupos e itens.
+- Orçamentos antigos continuam abrindo.
+- PDF/visualização continuam úteis com a nova estrutura.
+
+## Atualização - Importação de itens por Excel
+
+O catálogo passa a ter uma tela de importação para que o usuário envie a planilha usada atualmente e transforme linhas de serviço, mão de obra, materiais ou insumos em itens reutilizáveis.
+
+Regras:
+
+- A importação não copia a planilha visualmente.
+- O sistema tenta reconhecer colunas com nomes diferentes.
+- Colunas esperadas ou equivalentes: código, setor/categoria, descrição/nome, unidade, custo, preço, coeficiente, tipo e observações.
+- Antes de salvar, o usuário vê uma prévia com avisos.
+- Somente após confirmação os itens são inseridos em `catalog_items`.
+- Cada item importado recebe `workspace_id` pelo service autenticado.
+- A origem da linha fica registrada em `notes` para auditoria operacional.
+
+Critérios de aceite:
+
+- Subir arquivo `.xlsx`, `.xls` ou `.csv`.
+- Detectar itens mesmo com cabeçalhos diferentes.
+- Inferir tipo e unidade quando possível.
+- Calcular preço por `custo * coeficiente` quando não houver preço explícito.
+- Salvar itens no catálogo do workspace atual.
+- Não salvar nada antes da confirmação do usuário.

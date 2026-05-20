@@ -2,7 +2,7 @@
 
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { budgetStatusLabels } from "@/lib/labels";
+import { budgetGroupTypeLabels, budgetStatusLabels } from "@/lib/labels";
 import type { BudgetWithRelations, Settings } from "@/types/database.types";
 
 const styles = StyleSheet.create({
@@ -15,6 +15,9 @@ const styles = StyleSheet.create({
   boxTitle: { fontSize: 9, fontWeight: "bold", color: "#0369a1", marginBottom: 6, textTransform: "uppercase" },
   line: { marginBottom: 3 },
   table: { borderWidth: 1, borderColor: "#cbd5e1", marginBottom: 14 },
+  groupHeader: { backgroundColor: "#f1f5f9", borderTopWidth: 1, borderTopColor: "#cbd5e1", padding: 6, flexDirection: "row", justifyContent: "space-between" },
+  groupTitle: { fontWeight: "bold", color: "#0f172a" },
+  groupMeta: { color: "#475569" },
   row: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#e2e8f0" },
   head: { backgroundColor: "#e2e8f0", fontWeight: "bold" },
   cell: { padding: 6 },
@@ -69,14 +72,22 @@ export function BudgetPdfDocument({ budget, settings }: { budget: BudgetWithRela
             <Text style={[styles.cell, styles.discount]}>Desc.</Text>
             <Text style={[styles.cell, styles.total]}>Total</Text>
           </View>
-          {budget.budget_items.map((item) => (
-            <View key={item.id} style={styles.row}>
-              <Text style={[styles.cell, styles.item]}>{item.name}</Text>
-              <Text style={[styles.cell, styles.unit]}>{item.unit}</Text>
-              <Text style={[styles.cell, styles.qty]}>{item.quantity}</Text>
-              <Text style={[styles.cell, styles.price]}>{formatCurrency(item.price_unit)}</Text>
-              <Text style={[styles.cell, styles.discount]}>{formatCurrency(item.discount)}</Text>
-              <Text style={[styles.cell, styles.total]}>{formatCurrency(item.subtotal)}</Text>
+          {(budget.budget_groups ?? []).map((group) => (
+            <View key={group.id}>
+              <View style={styles.groupHeader}>
+                <Text style={styles.groupTitle}>{group.name}</Text>
+                <Text style={styles.groupMeta}>{budgetGroupTypeLabels[group.type]} · {formatCurrency(group.subtotal)}</Text>
+              </View>
+              {group.budget_items.map((item) => (
+                <View key={item.id} style={styles.row}>
+                  <Text style={[styles.cell, styles.item]}>{item.name}</Text>
+                  <Text style={[styles.cell, styles.unit]}>{item.unit}</Text>
+                  <Text style={[styles.cell, styles.qty]}>{item.quantity}</Text>
+                  <Text style={[styles.cell, styles.price]}>{formatCurrency(item.price_unit)}</Text>
+                  <Text style={[styles.cell, styles.discount]}>{formatCurrency(item.discount)}</Text>
+                  <Text style={[styles.cell, styles.total]}>{formatCurrency(item.subtotal)}</Text>
+                </View>
+              ))}
             </View>
           ))}
         </View>

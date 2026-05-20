@@ -22,17 +22,24 @@ export function toSaveBudgetInput(values: BudgetFormValues): SaveBudgetInput {
     discount_total: values.discount_total,
     tax_total: values.tax_total,
     status: values.status,
-    items: values.items.map((item) => ({
-      catalog_item_id: item.catalog_item_id ?? null,
-      name: item.name,
-      description: clean(item.description),
-      type: clean(item.type),
-      unit: item.unit,
-      quantity: item.quantity,
-      cost_unit: item.cost_unit,
-      price_unit: item.price_unit,
-      discount: item.discount,
-      notes: clean(item.notes)
+    groups: values.groups.map((group, groupIndex) => ({
+      id: group.id,
+      name: group.name,
+      type: group.type,
+      sort_order: groupIndex,
+      notes: clean(group.notes),
+      items: group.items.map((item) => ({
+        catalog_item_id: item.catalog_item_id ?? null,
+        name: item.name,
+        description: clean(item.description),
+        type: clean(item.type),
+        unit: item.unit,
+        quantity: item.quantity,
+        cost_unit: item.cost_unit,
+        price_unit: item.price_unit,
+        discount: item.discount,
+        notes: clean(item.notes)
+      }))
     }))
   };
 }

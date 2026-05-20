@@ -96,3 +96,22 @@
 - [ ] Usar membership de workspace em `select`, `insert`, `update` e `delete`.
 - [ ] Testar usuário B tentando acessar dados do usuário A.
 - [ ] Criar funções auxiliares em schema não exposto.
+
+## Orçamentos agrupados
+
+- [ ] Criar RLS para `budget_groups` antes de expor a tabela ao frontend.
+- [ ] Autorizar `budget_groups` somente se o usuário for membro do workspace do orçamento pai.
+- [ ] Validar que `budget_items.group_id`, quando informado, pertence ao mesmo `budget_id`.
+- [ ] Não permitir inserir item em grupo de orçamento de outro workspace.
+- [ ] Não permitir remover grupo de orçamento fora do workspace atual.
+- [ ] Manter filtros explícitos por workspace nos services, além da RLS.
+- [ ] Confirmar que PDF agrupado não expõe observações internas.
+
+## Importação de Excel
+
+- [ ] Não salvar arquivo bruto da planilha no banco.
+- [ ] Inserir apenas itens confirmados pelo usuário.
+- [ ] Usar `workspace_id` do usuário autenticado.
+- [ ] Validar tipo, unidade e valores antes de inserir.
+- [ ] Não expor stack trace em erro de parsing.
+- [ ] Tratar planilhas sem cabeçalho reconhecível.

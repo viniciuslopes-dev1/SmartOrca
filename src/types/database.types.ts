@@ -45,6 +45,12 @@ export type Database = {
         Update: Partial<Omit<Budget, "id" | "created_at" | "updated_at">>;
         Relationships: [];
       };
+      budget_groups: {
+        Row: BudgetGroup;
+        Insert: Omit<BudgetGroup, "id" | "created_at" | "updated_at"> & Partial<Pick<BudgetGroup, "id" | "created_at" | "updated_at">>;
+        Update: Partial<Omit<BudgetGroup, "id" | "created_at" | "updated_at">>;
+        Relationships: [];
+      };
       budget_items: {
         Row: BudgetItem;
         Insert: Omit<BudgetItem, "id" | "created_at" | "updated_at"> & Partial<Pick<BudgetItem, "id" | "created_at" | "updated_at">>;
@@ -92,6 +98,7 @@ export type ProjectStatus = "planning" | "estimating" | "waiting_approval" | "ap
 export type CatalogItemType = "product" | "service" | "labor" | "material" | "equipment" | "fee_other";
 export type CatalogUnit = "unit" | "m2" | "m3" | "linear_meter" | "hour" | "day" | "kg" | "package" | "other";
 export type BudgetStatus = "draft" | "sent" | "approved" | "rejected" | "expired" | "cancelled";
+export type BudgetGroupType = "labor" | "material" | "service" | "product" | "stage" | "other";
 
 export type Workspace = {
   id: string;
@@ -204,9 +211,22 @@ export type Budget = {
   updated_at: string;
 };
 
+export type BudgetGroup = {
+  id: string;
+  budget_id: string;
+  name: string;
+  type: BudgetGroupType;
+  sort_order: number;
+  subtotal: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type BudgetItem = {
   id: string;
   budget_id: string;
+  group_id: string | null;
   catalog_item_id: string | null;
   name: string;
   description: string | null;
@@ -260,6 +280,7 @@ export type BudgetWithRelations = Budget & {
   clients: Client | null;
   projects: Project | null;
   budget_items: BudgetItem[];
+  budget_groups?: BudgetGroupWithItems[];
 };
 
 export type ProjectWithClient = Project & {
@@ -273,4 +294,8 @@ export type BudgetListItem = Budget & {
 
 export type WorkspaceMembership = WorkspaceMember & {
   workspaces: Workspace | null;
+};
+
+export type BudgetGroupWithItems = BudgetGroup & {
+  budget_items: BudgetItem[];
 };

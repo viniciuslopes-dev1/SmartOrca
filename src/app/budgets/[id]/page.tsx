@@ -11,7 +11,7 @@ import { BudgetStatusBadge } from "@/components/status-badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Select } from "@/components/ui/field";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters";
-import { budgetStatusLabels } from "@/lib/labels";
+import { budgetGroupTypeLabels, budgetStatusLabels } from "@/lib/labels";
 import { useBudget, useBudgetStatusHistory, useChangeBudgetStatus } from "@/hooks/useBudgets";
 import { useSettings } from "@/hooks/useSettings";
 import type { BudgetStatus } from "@/types/database.types";
@@ -76,34 +76,45 @@ export default function BudgetDetailPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><h2 className="font-semibold">Itens</h2></CardHeader>
-              <CardContent>
-                <div className="industrial-scrollbar overflow-x-auto">
-                  <table className="w-full min-w-[780px] text-left text-sm">
-                    <thead className="bg-slate-100 text-xs uppercase text-slate-500">
-                      <tr>
-                        <th className="px-3 py-2">Item</th>
-                        <th className="px-3 py-2">Qtd.</th>
-                        <th className="px-3 py-2">Unidade</th>
-                        <th className="px-3 py-2">Preço</th>
-                        <th className="px-3 py-2">Desconto</th>
-                        <th className="px-3 py-2">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {budget.data.budget_items.map((item) => (
-                        <tr key={item.id}>
-                          <td className="px-3 py-2 font-medium">{item.name}</td>
-                          <td className="px-3 py-2">{item.quantity}</td>
-                          <td className="px-3 py-2">{item.unit}</td>
-                          <td className="px-3 py-2">{formatCurrency(item.price_unit)}</td>
-                          <td className="px-3 py-2">{formatCurrency(item.discount)}</td>
-                          <td className="px-3 py-2 font-semibold">{formatCurrency(item.subtotal)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <CardHeader><h2 className="font-semibold">Composição</h2></CardHeader>
+              <CardContent className="grid gap-4">
+                {(budget.data.budget_groups ?? []).map((group) => (
+                  <div key={group.id} className="rounded-md border border-border bg-white">
+                    <div className="flex flex-col gap-1 border-b border-border bg-slate-50 px-3 py-2 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h3 className="font-semibold">{group.name}</h3>
+                        <p className="text-xs text-slate-500">{budgetGroupTypeLabels[group.type]}</p>
+                      </div>
+                      <div className="text-sm font-bold">{formatCurrency(group.subtotal)}</div>
+                    </div>
+                    <div className="industrial-scrollbar overflow-x-auto">
+                      <table className="w-full min-w-[780px] text-left text-sm">
+                        <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+                          <tr>
+                            <th className="px-3 py-2">Item</th>
+                            <th className="px-3 py-2">Qtd.</th>
+                            <th className="px-3 py-2">Unidade</th>
+                            <th className="px-3 py-2">Preço</th>
+                            <th className="px-3 py-2">Desconto</th>
+                            <th className="px-3 py-2">Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {group.budget_items.map((item) => (
+                            <tr key={item.id}>
+                              <td className="px-3 py-2 font-medium">{item.name}</td>
+                              <td className="px-3 py-2">{item.quantity}</td>
+                              <td className="px-3 py-2">{item.unit}</td>
+                              <td className="px-3 py-2">{formatCurrency(item.price_unit)}</td>
+                              <td className="px-3 py-2">{formatCurrency(item.discount)}</td>
+                              <td className="px-3 py-2 font-semibold">{formatCurrency(item.subtotal)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
             <Card>

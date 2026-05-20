@@ -1,18 +1,28 @@
-import { calculateBudgetTotals, calculateItemMargin, calculateItemSubtotal } from "@/lib/calculations/budget";
+import { calculateGroupedBudgetTotals, calculateGroupSubtotal, calculateItemMargin, calculateItemSubtotal } from "@/lib/calculations/budget";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeSupabaseError } from "@/services/service-error";
-import type { Budget, BudgetItem, BudgetListItem, BudgetStatus, BudgetWithRelations, Database } from "@/types/database.types";
+import type { Budget, BudgetGroup, BudgetGroupType, BudgetGroupWithItems, BudgetItem, BudgetListItem, BudgetStatus, BudgetWithRelations, Database } from "@/types/database.types";
 
 type BudgetInsert = Database["public"]["Tables"]["budgets"]["Insert"];
 type BudgetUpdate = Database["public"]["Tables"]["budgets"]["Update"];
+type BudgetGroupInsert = Database["public"]["Tables"]["budget_groups"]["Insert"];
 type BudgetItemInsert = Database["public"]["Tables"]["budget_items"]["Insert"];
+type SaveBudgetItemInput = Omit<BudgetItemInsert, "id" | "budget_id" | "group_id" | "subtotal" | "margin" | "sort_order" | "created_at" | "updated_at">;
+type SaveBudgetGroupInput = {
+  id?: string;
+  name: string;
+  type: BudgetGroupType;
+  sort_order?: number;
+  notes?: string | null;
+  items: SaveBudgetItemInput[];
+};
 
 export type SaveBudgetInput = Omit<
   BudgetInsert,
   "id" | "workspace_id" | "budget_number" | "subtotal" | "margin_total" | "total" | "created_at" | "updated_at"
 > & {
   budget_number?: number;
-  items: Omit<BudgetItemInsert, "id" | "budget_id" | "subtotal" | "margin" | "sort_order" | "created_at" | "updated_at">[];
+  groups: SaveBudgetGroupInput[];
 };
 
 export async function listBudgets(workspaceId: string, params: { search?: string; status?: BudgetStatus | "all" } = {}) {
@@ -39,25 +49,25 @@ export async function getBudgetById(workspaceId: string, id: string) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("budgets")
-    .select("*, clients(*), projects(*), budget_items(*)")
+    .select("*, clients(*), projects(*), budget_items(*), budget_groups(*, budget_items(*))")
     .eq("workspace_id", workspaceId)
     .eq("id", id)
     .single();
   if (error) throw normalizeSupabaseError(error);
-  const budget = data as unknown as BudgetWithRelations;
+  const budget = normalizeBudgetRelations(data as unknown as BudgetWithRelations);
   budget.budget_items = [...(budget.budget_items ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   return budget;
 }
 
 export async function createBudget(workspaceId: string, input: SaveBudgetInput) {
   const supabase = getSupabaseClient();
-  const totals = calculateBudgetTotals({
-    items: input.items,
+  const totals = calculateGroupedBudgetTotals({
+    groups: input.groups,
     discount_total: input.discount_total,
     tax_total: input.tax_total
   });
   const budgetNumber = input.budget_number ?? (await getNextBudgetNumber(workspaceId));
-  const { items, ...budgetInput } = input;
+  const { groups, ...budgetInput } = input;
 
   const { data: budget, error } = await supabase
     .from("budgets")
@@ -75,20 +85,20 @@ export async function createBudget(workspaceId: string, input: SaveBudgetInput) 
     .single();
   if (error) throw normalizeSupabaseError(error);
 
-  await replaceBudgetItems(budget.id, items);
+  await replaceBudgetGroups(budget.id, groups);
   await recordStatusHistory(budget.id, null, budget.status);
   return getBudgetById(workspaceId, budget.id);
 }
 
 export async function updateBudget(workspaceId: string, id: string, input: SaveBudgetInput) {
   const supabase = getSupabaseClient();
-  const totals = calculateBudgetTotals({
-    items: input.items,
+  const totals = calculateGroupedBudgetTotals({
+    groups: input.groups,
     discount_total: input.discount_total,
     tax_total: input.tax_total
   });
   const current = await getBudgetById(workspaceId, id);
-  const { items, budget_number: _budgetNumber, ...budgetInput } = input;
+  const { groups, budget_number: _budgetNumber, ...budgetInput } = input;
 
   const { data, error } = await supabase
     .from("budgets")
@@ -106,7 +116,7 @@ export async function updateBudget(workspaceId: string, id: string, input: SaveB
     .single();
   if (error) throw normalizeSupabaseError(error);
 
-  await replaceBudgetItems(id, items);
+  await replaceBudgetGroups(id, groups);
   if (current.status !== data.status) await recordStatusHistory(id, current.status, data.status);
   return getBudgetById(workspaceId, id);
 }
@@ -144,17 +154,23 @@ export async function duplicateBudget(workspaceId: string, id: string) {
     discount_total: budget.discount_total,
     tax_total: budget.tax_total,
     status: "draft",
-    items: budget.budget_items.map((item) => ({
-      catalog_item_id: item.catalog_item_id,
-      name: item.name,
-      description: item.description,
-      type: item.type,
-      unit: item.unit,
-      quantity: item.quantity,
-      cost_unit: item.cost_unit,
-      price_unit: item.price_unit,
-      discount: item.discount,
-      notes: item.notes
+    groups: getBudgetGroups(budget).map((group, groupIndex) => ({
+      name: group.name,
+      type: group.type,
+      sort_order: groupIndex,
+      notes: group.notes,
+      items: group.budget_items.map((item) => ({
+        catalog_item_id: item.catalog_item_id,
+        name: item.name,
+        description: item.description,
+        type: item.type,
+        unit: item.unit,
+        quantity: item.quantity,
+        cost_unit: item.cost_unit,
+        price_unit: item.price_unit,
+        discount: item.discount,
+        notes: item.notes
+      }))
     }))
   });
 }
@@ -177,20 +193,43 @@ async function getNextBudgetNumber(workspaceId: string) {
   return data;
 }
 
-async function replaceBudgetItems(budgetId: string, items: SaveBudgetInput["items"]) {
+async function replaceBudgetGroups(budgetId: string, groups: SaveBudgetInput["groups"]) {
   const supabase = getSupabaseClient();
-  const deletion = await supabase.from("budget_items").delete().eq("budget_id", budgetId);
-  if (deletion.error) throw normalizeSupabaseError(deletion.error);
+  const itemDeletion = await supabase.from("budget_items").delete().eq("budget_id", budgetId);
+  if (itemDeletion.error) throw normalizeSupabaseError(itemDeletion.error);
 
-  const rows = items.map((item, index) => ({
-    ...item,
+  const groupDeletion = await supabase.from("budget_groups").delete().eq("budget_id", budgetId);
+  if (groupDeletion.error) throw normalizeSupabaseError(groupDeletion.error);
+
+  const groupRows: BudgetGroupInsert[] = groups.map((group, index) => ({
     budget_id: budgetId,
-    margin: calculateItemMargin(item),
-    subtotal: calculateItemSubtotal(item),
-    sort_order: index
+    name: group.name,
+    type: group.type,
+    sort_order: group.sort_order ?? index,
+    subtotal: calculateGroupSubtotal(group),
+    notes: group.notes ?? null
   }));
 
-  const { error } = await supabase.from("budget_items").insert(rows);
+  const { data: insertedGroups, error: groupError } = await supabase.from("budget_groups").insert(groupRows).select();
+  if (groupError) throw normalizeSupabaseError(groupError);
+
+  const sortedGroups = [...((insertedGroups ?? []) as BudgetGroup[])].sort((a, b) => a.sort_order - b.sort_order);
+  const itemRows = groups.flatMap((group, groupIndex) => {
+    const insertedGroup = sortedGroups[groupIndex];
+    if (!insertedGroup) return [];
+    return group.items.map((item, itemIndex) => ({
+      ...item,
+      budget_id: budgetId,
+      group_id: insertedGroup.id,
+      margin: calculateItemMargin(item),
+      subtotal: calculateItemSubtotal(item),
+      sort_order: itemIndex
+    }));
+  });
+
+  if (itemRows.length === 0) return;
+
+  const { error } = await supabase.from("budget_items").insert(itemRows);
   if (error) throw normalizeSupabaseError(error);
 }
 
@@ -207,3 +246,38 @@ async function recordStatusHistory(budgetId: string, oldStatus: BudgetStatus | n
 
 export type BudgetRow = Budget;
 export type BudgetItemRow = BudgetItem;
+
+function normalizeBudgetRelations(budget: BudgetWithRelations) {
+  const groups = getBudgetGroups(budget);
+  return {
+    ...budget,
+    budget_groups: groups,
+    budget_items: groups.flatMap((group) => group.budget_items)
+  } satisfies BudgetWithRelations;
+}
+
+export function getBudgetGroups(budget: BudgetWithRelations): BudgetGroupWithItems[] {
+  const relationGroups = [...(budget.budget_groups ?? [])]
+    .map((group) => ({
+      ...group,
+      budget_items: [...(group.budget_items ?? [])].sort((a, b) => a.sort_order - b.sort_order)
+    }))
+    .sort((a, b) => a.sort_order - b.sort_order);
+
+  if (relationGroups.length > 0) return relationGroups;
+
+  return [
+    {
+      id: "legacy-items",
+      budget_id: budget.id,
+      name: "Itens do orçamento",
+      type: "service" as BudgetGroupType,
+      sort_order: 0,
+      subtotal: budget.subtotal,
+      notes: null,
+      created_at: budget.created_at,
+      updated_at: budget.updated_at,
+      budget_items: [...(budget.budget_items ?? [])].sort((a, b) => a.sort_order - b.sort_order)
+    }
+  ];
+}

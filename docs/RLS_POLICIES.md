@@ -230,6 +230,43 @@ with check (
 
 Update/delete seguem a mesma regra.
 
+## `budget_groups`
+
+`budget_groups` também não terá `workspace_id`. O acesso depende do orçamento pai.
+
+```sql
+create policy "budget_groups_select_workspace_member"
+on public.budget_groups for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.budgets b
+    where b.id = budget_groups.budget_id
+    and private.is_workspace_member(b.workspace_id)
+  )
+);
+
+create policy "budget_groups_insert_workspace_member"
+on public.budget_groups for insert
+to authenticated
+with check (
+  exists (
+    select 1
+    from public.budgets b
+    where b.id = budget_groups.budget_id
+    and private.is_workspace_member(b.workspace_id)
+  )
+);
+```
+
+Update/delete seguem a mesma regra.
+
+Regra adicional planejada para `budget_items`:
+
+- Quando `budget_items.group_id` for informado, o grupo deve pertencer ao mesmo `budget_id` do item.
+- Essa validação pode ser feita por trigger ou função SQL antes de produção pública.
+
 ## `budget_status_history`
 
 Também depende do orçamento pai:

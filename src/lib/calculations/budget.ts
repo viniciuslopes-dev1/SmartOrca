@@ -13,6 +13,16 @@ export type BudgetTotalsInput = {
   tax_total?: number | string | null;
 };
 
+export type BudgetCalculationGroup = {
+  items: BudgetCalculationItem[];
+};
+
+export type GroupedBudgetTotalsInput = {
+  groups: BudgetCalculationGroup[];
+  discount_total?: number | string | null;
+  tax_total?: number | string | null;
+};
+
 export function calculateItemSubtotal(item: BudgetCalculationItem) {
   const gross = asNumber(item.quantity) * asNumber(item.price_unit);
   const discount = Math.min(asNumber(item.discount), gross);
@@ -41,6 +51,23 @@ export function calculateBudgetTotals(input: BudgetTotalsInput) {
   };
 }
 
+export function calculateGroupSubtotal(group: BudgetCalculationGroup) {
+  return roundMoney(group.items.reduce((sum, item) => sum + calculateItemSubtotal(item), 0));
+}
+
+export function flattenBudgetGroups(groups: BudgetCalculationGroup[]) {
+  return groups.flatMap((group) => group.items);
+}
+
+export function calculateGroupedBudgetTotals(input: GroupedBudgetTotalsInput) {
+  return calculateBudgetTotals({
+    items: flattenBudgetGroups(input.groups),
+    discount_total: input.discount_total,
+    tax_total: input.tax_total
+  });
+}
+
 export function roundMoney(value: number) {
+  if (!Number.isFinite(value)) return 0;
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }

@@ -261,3 +261,111 @@ Atualizar `database.types.ts` para incluir:
 ### Estratégia de proteção
 
 Usar proxy/server verification para rotas privadas e guard client-side apenas como complemento visual de loading. Decisão registrada em `ADR.md`.
+
+## Atualização técnica - Orçamento por grupos
+
+### Diagnóstico do fluxo atual
+
+- `src/components/budgets/budget-form.tsx` usa `useFieldArray` com `items`.
+- `src/lib/validations/schemas.ts` valida `budgetSchema.items`.
+- `src/lib/budget-form-mapper.ts` converte o formulário para `SaveBudgetInput` plano.
+- `src/services/budgets.service.ts` carrega `budget_items(*)`, salva o cabeçalho em `budgets` e reinserta todos os itens.
+- `src/lib/calculations/budget.ts` calcula subtotal e total a partir de uma lista plana.
+- `src/components/budgets/budget-pdf.tsx` e `src/app/budgets/[id]/page.tsx` renderizam itens sem grupos.
+
+### Nova modelagem no frontend
+
+Adicionar tipos de formulário agrupado:
+
+```ts
+type BudgetGroupFormValues = {
+  id?: string;
+  name: string;
+  type: "labor" | "material" | "service" | "product" | "stage" | "other";
+  sort_order: number;
+  notes?: string;
+  items: BudgetItemFormValues[];
+};
+```
+
+`BudgetFormValues` deve trocar `items` por `groups`, mantendo adaptadores de compatibilidade para dados antigos.
+
+### Componentes planejados
+
+- `BudgetForm`: orquestra dados gerais, grupos, totais e submit.
+- `BudgetGroupCard`: exibe cabeçalho do grupo, tipo, subtotal, ações e itens.
+- `BudgetGroupItemsTable`: edita os itens dentro de um grupo.
+- `BudgetTotalsPanel`: mostra subtotal, descontos, taxas, margem e total.
+- `BudgetEmptyGroupsState`: orienta criação do primeiro grupo.
+
+### Cálculos
+
+Centralizar em `src/lib/calculations/budget.ts`:
+
+- `calculateItemSubtotal(item)`.
+- `calculateGroupSubtotal(group)`.
+- `calculateGroupedBudgetTotals(groups, discount_total, tax_total)`.
+- `normalizeMoney(value)` para evitar `NaN`, `undefined` e arredondamento inconsistente.
+
+As regras existentes de item e total devem ser preservadas: desconto por item reduz subtotal, desconto total reduz o orçamento e taxas aumentam o total.
+
+### Persistência Supabase
+
+Criar tabela `budget_groups` e relacionar `budget_items.group_id` com ela. O service de orçamento deverá:
+
+1. Criar ou atualizar `budgets`.
+2. Criar, atualizar ou recriar grupos do orçamento.
+3. Inserir itens vinculados ao grupo correto.
+4. Manter transição segura para orçamentos antigos.
+
+No MVP, como o service atual já usa reinserção dos itens em atualização, a primeira implementação pode recriar grupos e itens do orçamento dentro do mesmo fluxo lógico, desde que preserve o orçamento pai e trate erro de forma clara.
+
+### Compatibilidade
+
+- `BudgetWithRelations` deve aceitar `budget_groups` quando existir.
+- Se `budget_groups` vier vazio e `budget_items` vier preenchido, o mapper cria um grupo temporário "Itens do orçamento".
+- Em novo salvamento, esses itens passam a ser persistidos com `group_id`.
+
+### Visualização e PDF
+
+Visualização e PDF devem renderizar:
+
+- Nome do grupo.
+- Tipo do grupo.
+- Itens internos.
+- Subtotal do grupo.
+- Total geral.
+
+Caso o orçamento antigo ainda não tenha grupo persistido, usar o grupo padrão calculado no mapper.
+
+### Segurança e RLS
+
+`budget_groups` não deve ter `workspace_id` próprio para evitar divergência. O acesso será protegido por relacionamento com `budgets.workspace_id`, seguindo a mesma lógica de `budget_items`.
+
+## Atualização técnica - Importação de Excel para catálogo
+
+### Arquivos planejados
+
+- `src/app/catalog/import/page.tsx`: upload, prévia e confirmação.
+- `src/lib/catalog-excel-import.ts`: parser client-side da planilha.
+- `src/services/catalog.service.ts`: inserção em lote no Supabase.
+- `src/hooks/useCatalogItems.ts`: mutation de importação.
+
+### Estratégia
+
+Usar `xlsx` no frontend para ler o arquivo local do usuário sem enviar o arquivo bruto para servidor. O parser normaliza cabeçalhos, detecta a linha de cabeçalho e converte linhas válidas para `catalog_items`.
+
+### Mapeamento flexível
+
+O parser reconhece variações como:
+
+- `descrição`, `serviço`, `produto`, `item`, `insumo` para nome.
+- `setor`, `categoria`, `grupo` para categoria.
+- `un`, `und`, `unidade` para unidade.
+- `valor custo`, `custo unitário` para custo.
+- `valor unitário`, `preço`, `preço venda` para preço.
+- `coef`, `coeficiente`, `fator` para multiplicador.
+
+### Segurança
+
+O arquivo é processado no navegador. O banco recebe apenas os itens confirmados na prévia, sempre via service com `workspace_id` do usuário autenticado e RLS de `catalog_items`.

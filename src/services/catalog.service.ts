@@ -43,6 +43,15 @@ export async function createCatalogItem(workspaceId: string, input: Omit<Catalog
   return data;
 }
 
+export async function importCatalogItems(workspaceId: string, items: Array<Omit<CatalogInsert, "workspace_id">>) {
+  if (items.length === 0) return [];
+  const supabase = getSupabaseClient();
+  const rows = items.map((item) => ({ ...item, workspace_id: workspaceId }));
+  const { data, error } = await supabase.from("catalog_items").insert(rows).select();
+  if (error) throw normalizeSupabaseError(error);
+  return data ?? [];
+}
+
 export async function updateCatalogItem(workspaceId: string, id: string, input: CatalogUpdate) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase

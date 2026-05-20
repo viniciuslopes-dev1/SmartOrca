@@ -60,6 +60,7 @@ export const catalogItemSchema = z.object({
 
 export const budgetItemSchema = z.object({
   id: z.string().optional(),
+  group_id: z.string().uuid().nullable().optional(),
   catalog_item_id: z.string().uuid().nullable().optional(),
   name: z.string().trim().min(1, "Informe o nome do item."),
   description: z.string().trim().optional().or(z.literal("")),
@@ -73,6 +74,16 @@ export const budgetItemSchema = z.object({
   subtotal: money,
   sort_order: z.number().int().min(0),
   notes: z.string().trim().optional().or(z.literal(""))
+});
+
+export const budgetGroupSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(1, "Informe o nome do grupo."),
+  type: z.enum(["labor", "material", "service", "product", "stage", "other"]),
+  sort_order: z.number().int().min(0),
+  subtotal: money,
+  notes: z.string().trim().optional().or(z.literal("")),
+  items: z.array(budgetItemSchema).min(1, "Inclua ao menos um item neste grupo.")
 });
 
 export const budgetSchema = z
@@ -92,7 +103,7 @@ export const budgetSchema = z
     discount_total: money,
     tax_total: money,
     status: z.enum(["draft", "sent", "approved", "rejected", "expired", "cancelled"]),
-    items: z.array(budgetItemSchema).min(1, "Inclua ao menos um item no orçamento.")
+    groups: z.array(budgetGroupSchema).min(1, "Inclua ao menos um grupo no orçamento.")
   })
   .refine((data) => !data.valid_until || data.valid_until >= data.issue_date, {
     path: ["valid_until"],
@@ -104,6 +115,7 @@ export type ProjectFormValues = z.infer<typeof projectSchema>;
 export type CatalogItemFormValues = z.infer<typeof catalogItemSchema>;
 export type BudgetFormValues = z.infer<typeof budgetSchema>;
 export type BudgetItemFormValues = z.infer<typeof budgetItemSchema>;
+export type BudgetGroupFormValues = z.infer<typeof budgetGroupSchema>;
 
 export const loginSchema = z.object({
   email: z.string().trim().min(1, "Informe o email.").email("Email inválido."),

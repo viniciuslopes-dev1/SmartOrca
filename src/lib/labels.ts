@@ -22,6 +22,15 @@ export const budgetStatusLabels = {
   cancelled: "Cancelado"
 } as const;
 
+export const budgetGroupTypeLabels = {
+  labor: "Mão de obra",
+  material: "Materiais",
+  service: "Serviços",
+  product: "Produtos",
+  stage: "Etapa da obra",
+  other: "Outros"
+} as const;
+
 export const catalogTypeLabels = {
   product: "Produto",
   service: "Serviço",
