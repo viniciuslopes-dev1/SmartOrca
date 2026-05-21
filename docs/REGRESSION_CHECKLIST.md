@@ -138,3 +138,10 @@
 - [ ] Catálogo reflete itens importados.
 - [ ] Importação não duplica chamadas de save durante a prévia.
 - [ ] Erro de arquivo inválido é amigável.
+
+## Regressao - orcamentos com branding
+- [ ] Criacao/edicao de orcamento continua calculando subtotal/total corretamente.
+- [ ] Orcamentos antigos abrem normalmente sem budget_layout.
+- [ ] PDF continua gerando sem logo e sem layout definido.
+- [ ] Filtros/listagens de orcamentos sem regressao.
+- [ ] Settings gerais continuam salvando campos existentes.

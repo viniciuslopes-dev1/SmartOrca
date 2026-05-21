@@ -21,6 +21,7 @@ export function toSaveBudgetInput(values: BudgetFormValues): SaveBudgetInput {
     internal_notes: clean(values.internal_notes),
     discount_total: values.discount_total,
     tax_total: values.tax_total,
+    budget_layout: values.budget_layout ?? null,
     status: values.status,
     groups: values.groups.map((group, groupIndex) => ({
       id: group.id,

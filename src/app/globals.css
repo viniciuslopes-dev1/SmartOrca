@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 20% 97%;
-  --foreground: 215 28% 17%;
+  --background: 212 32% 96%;
+  --foreground: 222 40% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 215 28% 17%;
-  --muted: 214 18% 92%;
-  --muted-foreground: 215 12% 42%;
-  --primary: 199 78% 27%;
+  --card-foreground: 222 40% 15%;
+  --muted: 214 25% 90%;
+  --muted-foreground: 220 15% 40%;
+  --primary: 207 84% 34%;
   --primary-foreground: 0 0% 100%;
   --destructive: 0 72% 42%;
   --destructive-foreground: 0 0% 100%;
-  --border: 214 18% 84%;
-  --input: 214 18% 84%;
-  --ring: 199 78% 27%;
+  --border: 214 25% 82%;
+  --input: 214 25% 82%;
+  --ring: 207 84% 34%;
 }
 
 * {
@@ -24,9 +24,14 @@
 
 body {
   margin: 0;
-  background: hsl(var(--background));
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.11), transparent 36%),
+    radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
+    hsl(var(--background));
   color: hsl(var(--foreground));
-  line-height: 1.4;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -53,11 +58,11 @@ select {
 
 @layer components {
   .surface-card {
-    @apply rounded-lg border border-border bg-card text-card-foreground shadow-industrial;
+    @apply rounded-xl border border-border/90 bg-card text-card-foreground shadow-industrial;
   }
 
   .list-toolbar {
-    @apply flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between;
+    @apply flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between;
   }
 
   .table-wrap {
@@ -69,7 +74,7 @@ select {
   }
 
   .data-table thead {
-    @apply bg-slate-100 text-xs uppercase text-slate-500;
+    @apply bg-slate-100/80 text-xs uppercase tracking-wide text-slate-500;
   }
 
   .data-table th {
@@ -81,7 +86,7 @@ select {
   }
 
   .data-table td {
-    @apply px-4 py-3 align-top;
+    @apply px-4 py-3.5 align-top;
   }
 
   .row-link {

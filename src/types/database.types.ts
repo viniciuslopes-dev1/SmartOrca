@@ -99,6 +99,7 @@ export type CatalogItemType = "product" | "service" | "labor" | "material" | "eq
 export type CatalogUnit = "unit" | "m2" | "m3" | "linear_meter" | "hour" | "day" | "kg" | "package" | "other";
 export type BudgetStatus = "draft" | "sent" | "approved" | "rejected" | "expired" | "cancelled";
 export type BudgetGroupType = "labor" | "material" | "service" | "product" | "stage" | "other";
+export type BudgetLayoutId = "classic" | "modern" | "compact" | "detailed" | "corporate" | "premium" | "technical" | "minimal";
 
 export type Workspace = {
   id: string;
@@ -206,6 +207,7 @@ export type Budget = {
   tax_total: number;
   margin_total: number;
   total: number;
+  budget_layout: BudgetLayoutId | null;
   status: BudgetStatus;
   created_at: string;
   updated_at: string;
@@ -264,6 +266,9 @@ export type Settings = {
   default_budget_validity_days: number;
   default_payment_terms: string | null;
   default_notes: string | null;
+  logo_url: string | null;
+  logo_path: string | null;
+  default_budget_layout: BudgetLayoutId;
   created_at: string;
   updated_at: string;
 };

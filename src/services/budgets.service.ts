@@ -153,6 +153,7 @@ export async function duplicateBudget(workspaceId: string, id: string) {
     internal_notes: budget.internal_notes,
     discount_total: budget.discount_total,
     tax_total: budget.tax_total,
+    budget_layout: budget.budget_layout,
     status: "draft",
     groups: getBudgetGroups(budget).map((group, groupIndex) => ({
       name: group.name,

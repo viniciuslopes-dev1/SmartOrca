@@ -163,3 +163,9 @@ Consequências:
 - O sistema ganha separação por mão de obra, materiais e serviços agora.
 - Campos como percentual de indiretos, lucro e composição de preço podem ser planejados depois com testes específicos.
 - A análise da planilha fica registrada para orientar essa evolução.
+
+## ADR - Branding de orcamento por workspace
+- Contexto: clientes precisam personalizar logo e layout sem alterar regras de calculo.
+- Decisao: armazenar preferencias em settings (logo_url/logo_path/default_budget_layout) e permitir override por orcamento em budgets.budget_layout.
+- Decisao: usar bucket workspace-branding com escrita restrita por workspace e leitura publica para compatibilidade de renderizacao no PDF cliente.
+- Consequencia: URLs de logo podem ser publicas; controle de escrita permanece protegido por RLS/policies.

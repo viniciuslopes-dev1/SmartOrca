@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { calculateGroupedBudgetTotals, calculateGroupSubtotal, calculateItemSubtotal } from "@/lib/calculations/budget";
+import { BUDGET_LAYOUTS, resolveBudgetLayoutId } from "@/lib/budget-layouts";
 import { formatCurrency } from "@/lib/formatters";
 import { budgetGroupTypeLabels, budgetStatusLabels, catalogTypeLabels, unitLabels } from "@/lib/labels";
 import { budgetSchema, type BudgetFormValues, type BudgetItemFormValues } from "@/lib/validations/schemas";
-import type { BudgetGroupType, BudgetWithRelations, CatalogItem, Client, ProjectWithClient } from "@/types/database.types";
+import type { BudgetGroupType, BudgetWithRelations, CatalogItem, CatalogItemType, Client, ProjectWithClient } from "@/types/database.types";
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -101,6 +102,7 @@ export function BudgetForm({
   initial,
   presetClientId,
   presetProjectId,
+  defaultLayoutId,
   onSubmit,
   submitLabel,
   isSubmitting
@@ -111,6 +113,7 @@ export function BudgetForm({
   initial?: BudgetWithRelations;
   presetClientId?: string;
   presetProjectId?: string;
+  defaultLayoutId?: string;
   onSubmit: (values: BudgetFormValues) => void;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -140,6 +143,7 @@ export function BudgetForm({
       internal_notes: initial?.internal_notes ?? "",
       discount_total: initial?.discount_total ?? 0,
       tax_total: initial?.tax_total ?? 0,
+      budget_layout: resolveBudgetLayoutId(initial?.budget_layout ?? defaultLayoutId),
       status: initial?.status ?? "draft",
       groups: initialGroups(initial)
     }
@@ -191,6 +195,11 @@ export function BudgetForm({
             <Field label="Status" error={errors.status?.message}>
               <Select {...register("status")}>
                 {Object.entries(budgetStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </Select>
+            </Field>
+            <Field label="Template" error={errors.budget_layout?.message}>
+              <Select {...register("budget_layout")}>
+                {BUDGET_LAYOUTS.map((layout) => <option key={layout.id} value={layout.id}>{layout.name}</option>)}
               </Select>
             </Field>
             <Field label="Título" error={errors.title?.message} className="md:col-span-2">
@@ -360,11 +369,20 @@ function BudgetGroupEditor({
   catalog: CatalogItem[];
   onRemoveGroup: () => void;
 }) {
+  const [catalogType, setCatalogType] = useState<CatalogItemType | "">("");
   const [catalogId, setCatalogId] = useState("");
   const name = `groups.${groupIndex}.items` as const;
   const { fields, append, remove } = useFieldArray({ control, name });
   const items = useWatch({ control, name }) ?? [];
   const subtotal = calculateGroupSubtotal({ items });
+  const catalogTypes = useMemo(() => {
+    const types = new Set(catalog.map((item) => item.type));
+    return Array.from(types).sort((a, b) => catalogTypeLabels[a].localeCompare(catalogTypeLabels[b], "pt-BR"));
+  }, [catalog]);
+  const filteredCatalog = useMemo(() => {
+    if (!catalogType) return [];
+    return catalog.filter((item) => item.type === catalogType);
+  }, [catalog, catalogType]);
 
   function addManualItem() {
     append(emptyItem(fields.length));
@@ -415,11 +433,23 @@ function BudgetGroupEditor({
         <Field label="Observações do grupo" error={errors.groups?.[groupIndex]?.notes?.message}>
           <Input {...register(`groups.${groupIndex}.notes`)} placeholder="Opcional" />
         </Field>
-        <div className="flex flex-col gap-2 md:flex-row">
-          <Select value={catalogId} onChange={(event) => setCatalogId(event.target.value)} className="md:w-80">
-            <option value="">Selecionar item do catálogo</option>
-            {catalog.map((item) => (
-              <option key={item.id} value={item.id}>{item.name} · {catalogTypeLabels[item.type]}</option>
+        <div className="grid gap-2 md:grid-cols-[220px_minmax(280px,1fr)_auto_auto]">
+          <Select
+            value={catalogType}
+            onChange={(event) => {
+              setCatalogType(event.target.value as CatalogItemType | "");
+              setCatalogId("");
+            }}
+          >
+            <option value="">Tipo do catálogo</option>
+            {catalogTypes.map((type) => (
+              <option key={type} value={type}>{catalogTypeLabels[type]}</option>
+            ))}
+          </Select>
+          <Select value={catalogId} onChange={(event) => setCatalogId(event.target.value)} disabled={!catalogType}>
+            <option value="">{catalogType ? "Selecionar item" : "Escolha um tipo primeiro"}</option>
+            {filteredCatalog.map((item) => (
+              <option key={item.id} value={item.id}>{item.name}</option>
             ))}
           </Select>
           <Button type="button" variant="secondary" onClick={addCatalogItem} disabled={!catalogId}>
@@ -489,3 +519,4 @@ function TotalLine({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+

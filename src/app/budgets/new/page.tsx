@@ -9,6 +9,7 @@ import { useCreateBudget } from "@/hooks/useBudgets";
 import { useCatalogItems } from "@/hooks/useCatalogItems";
 import { useClients } from "@/hooks/useClients";
 import { useProjects } from "@/hooks/useProjects";
+import { useSettings } from "@/hooks/useSettings";
 import { toSaveBudgetInput } from "@/lib/budget-form-mapper";
 import type { BudgetFormValues } from "@/lib/validations/schemas";
 
@@ -27,6 +28,7 @@ function NewBudgetContent() {
   const projects = useProjects();
   const catalog = useCatalogItems({ activeOnly: true });
   const create = useCreateBudget();
+  const settings = useSettings();
 
   function submit(values: BudgetFormValues) {
     create.mutate(toSaveBudgetInput(values), {
@@ -34,8 +36,8 @@ function NewBudgetContent() {
     });
   }
 
-  const loading = clients.isLoading || projects.isLoading || catalog.isLoading;
-  const error = clients.error || projects.error || catalog.error;
+  const loading = clients.isLoading || projects.isLoading || catalog.isLoading || settings.isLoading;
+  const error = clients.error || projects.error || catalog.error || settings.error;
 
   return (
     <>
@@ -50,6 +52,7 @@ function NewBudgetContent() {
             catalog={catalog.data}
             presetClientId={params.get("clientId") ?? undefined}
             presetProjectId={params.get("projectId") ?? undefined}
+            defaultLayoutId={settings.data?.default_budget_layout}
             onSubmit={submit}
             submitLabel="Salvar orçamento"
             isSubmitting={create.isPending}

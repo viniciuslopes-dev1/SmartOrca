@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export function LoadingState({ label = "Carregando dados..." }: { label?: string }) {
   return (
-    <div className="flex min-h-32 items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-slate-50 px-4 text-sm font-medium text-slate-600">
+    <div className="flex min-h-32 items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-slate-50/70 px-4 text-sm font-medium text-slate-600">
       <Loader2 className="h-4 w-4 animate-spin text-primary" />
       {label}
     </div>
@@ -12,7 +12,7 @@ export function LoadingState({ label = "Carregando dados..." }: { label?: string
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-lg border border-red-200 bg-red-50 p-5 text-center text-sm text-red-800">
+    <div className="flex min-h-32 flex-col items-center justify-center gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-center text-sm text-red-800 shadow-sm">
       <AlertTriangle className="h-5 w-5" />
       <p>{message}</p>
       {onRetry ? (
@@ -26,7 +26,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-slate-50 p-6 text-center">
+    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-slate-50/80 p-6 text-center">
       <div>
         <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
         {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}

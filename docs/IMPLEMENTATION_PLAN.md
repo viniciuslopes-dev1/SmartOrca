@@ -204,3 +204,10 @@
 - Criar mutation de importação em lote.
 - Adicionar botão "Importar Excel" no catálogo.
 - Testar com a planilha do cliente e com cabeçalhos alternativos.
+
+## 21. Identidade visual e layouts
+- Criar migration de settings/budgets para layout e logo.
+- Criar bucket/policies de storage para logo por workspace.
+- Implementar upload/remocao de logo com validacoes.
+- Implementar galeria de layouts e selecao de layout padrao.
+- Aplicar layout no formulario de orcamento e no PDF.

@@ -369,3 +369,10 @@ O parser reconhece variações como:
 ### Segurança
 
 O arquivo é processado no navegador. O banco recebe apenas os itens confirmados na prévia, sempre via service com `workspace_id` do usuário autenticado e RLS de `catalog_items`.
+
+## Atualizacao tecnica - Branding e layouts
+- Migration 0009 adiciona logo_url/logo_path/default_budget_layout em settings e budget_layout em budgets.
+- Bucket public workspace-branding com limite de 2MB e MIME permitido png/jpeg/webp.
+- Policies de storage restringem escrita por membership e prefixo workspace_id no caminho do arquivo.
+- Novo componente de preview: src/components/budgets/budget-layout-preview.tsx.
+- PDF respeita budget_layout/default_budget_layout e tenta renderizar logo quando presente.

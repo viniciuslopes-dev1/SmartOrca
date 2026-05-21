@@ -28,7 +28,7 @@ const config: Config = {
         }
       },
       boxShadow: {
-        industrial: "0 1px 0 rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06)"
+        industrial: "0 1px 1px rgba(15, 23, 42, 0.05), 0 10px 30px rgba(15, 23, 42, 0.08)"
       }
     }
   },

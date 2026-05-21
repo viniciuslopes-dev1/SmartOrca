@@ -252,3 +252,9 @@ Critérios de aceite:
 - Calcular preço por `custo * coeficiente` quando não houver preço explícito.
 - Salvar itens no catálogo do workspace atual.
 - Não salvar nada antes da confirmação do usuário.
+
+## Atualizacao - Identidade visual e layouts de orcamento
+- Adicionado upload de logo por workspace em bucket de storage dedicado.
+- Adicionada preferencia de layout padrao em settings e layout por orcamento.
+- Layouts alteram apenas apresentacao; calculos permanecem centralizados em lib/calculations/budget.ts.
+- Preview visual em configuracoes usa dados ficticios e no fluxo real usa dados do orcamento.

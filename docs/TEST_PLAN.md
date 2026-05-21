@@ -48,3 +48,11 @@ Validar que o sistema continua funcional apos a melhoria de UI/UX, mantendo regr
 - Nenhuma rota principal quebrada.
 - Melhorias visuais aplicadas com consistencia.
 - Responsividade melhor que a baseline anterior.
+
+## Testes manuais - logo e layouts
+- Upload de logo valido (png/jpg/jpeg/webp) e exibicao imediata.
+- Upload invalido (tipo/arquivo maior que 2MB) com erro amigavel.
+- Remocao de logo sem quebrar preview.
+- Troca de layout padrao e persistencia entre recargas.
+- Novo orcamento herda layout padrao; edicao permite trocar layout por orcamento.
+- PDF gerado com layout aplicado e fallback sem logo.

@@ -102,6 +102,7 @@ export const budgetSchema = z
     internal_notes: z.string().trim().optional().or(z.literal("")),
     discount_total: money,
     tax_total: money,
+    budget_layout: z.enum(["classic", "modern", "compact", "detailed", "corporate", "premium", "technical", "minimal"]).optional(),
     status: z.enum(["draft", "sent", "approved", "rejected", "expired", "cancelled"]),
     groups: z.array(budgetGroupSchema).min(1, "Inclua ao menos um grupo no orçamento.")
   })

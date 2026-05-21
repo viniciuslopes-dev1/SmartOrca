@@ -115,3 +115,11 @@
 - [ ] Validar tipo, unidade e valores antes de inserir.
 - [ ] Não expor stack trace em erro de parsing.
 - [ ] Tratar planilhas sem cabeçalho reconhecível.
+
+## Checklist - upload de logo
+- [x] Validar extensao e MIME permitidos no cliente.
+- [x] Limitar tamanho maximo do arquivo (2MB).
+- [x] Validar dimensoes minimas e maximas da imagem.
+- [x] Bloquear SVG e formatos executaveis.
+- [x] Isolar escrita em storage por workspace via policy + path prefix.
+- [x] Tratar falhas de upload sem exibir stack trace.
