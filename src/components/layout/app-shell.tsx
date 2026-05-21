@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, Boxes, Building2, ClipboardList, FileText, Home, LogOut, Menu, Settings, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoadingState } from "@/components/feedback/data-state";
 import { cn } from "@/lib/utils";
 import { useSignOut } from "@/hooks/useAuth";
@@ -21,16 +21,29 @@ const navItems = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const signOut = useSignOut();
-  const workspace = useWorkspaceId();
   const isPublicAuthRoute = ["/login", "/register", "/forgot-password"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
   const isOnboarding = pathname === "/onboarding/workspace";
 
   if (isPublicAuthRoute || isOnboarding) {
     return <>{children}</>;
   }
+
+  return <AuthenticatedShell>{children}</AuthenticatedShell>;
+}
+
+function AuthenticatedShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const signOut = useSignOut();
+  const workspace = useWorkspaceId();
+  const isOnboarding = pathname === "/onboarding/workspace";
+
+  useEffect(() => {
+    if (!workspace.isLoading && !workspace.workspaceId && !isOnboarding) {
+      router.replace("/onboarding/workspace");
+    }
+  }, [isOnboarding, router, workspace.isLoading, workspace.workspaceId]);
 
   if (workspace.isLoading) {
     return (
@@ -43,7 +56,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   if (!workspace.workspaceId && !isOnboarding) {
-    router.replace("/onboarding/workspace");
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-6">
         <div className="w-full max-w-md">

@@ -33,7 +33,10 @@ function LoginContent() {
 
   function submit(values: LoginFormValues) {
     signIn.mutate(values, {
-      onSuccess: () => router.replace(searchParams.get("next") || "/dashboard")
+      onSuccess: () => {
+        router.replace(searchParams.get("next") || "/dashboard");
+        router.refresh();
+      }
     });
   }
 

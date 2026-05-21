@@ -24,7 +24,11 @@ export function useSignIn() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: signInWithPassword,
-    onSuccess: () => queryClient.invalidateQueries()
+    onSuccess: (data) => {
+      queryClient.setQueryData(["auth-user"], data.user ?? null);
+      void queryClient.invalidateQueries({ queryKey: ["current-workspace"] });
+      void queryClient.invalidateQueries({ queryKey: ["workspace-memberships"] });
+    }
   });
 }
 
