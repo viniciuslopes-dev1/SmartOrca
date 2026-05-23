@@ -1,11 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Building2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { useSignUp } from "@/hooks/useAuth";
 import { useCreateWorkspace } from "@/hooks/useWorkspace";
 import { registerSchema, type RegisterFormValues } from "@/lib/validations/schemas";
@@ -50,14 +51,11 @@ export default function RegisterPage() {
       <section className="absolute inset-0 opacity-[0.22] [background-image:linear-gradient(rgba(148,163,184,.22)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.22)_1px,transparent_1px)] [background-size:64px_64px]" />
 
       <section className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col justify-center">
-        <Link href="/dashboard" className="mb-8 flex w-fit items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/8 text-[#d6a13a] shadow-sm">
-            <Building2 className="h-5 w-5" />
+        <Link href="/dashboard" className="mb-8 flex w-fit flex-col gap-2">
+          <span className="flex h-16 w-56 items-center overflow-hidden rounded-lg border border-white/10 bg-white px-3 shadow-sm">
+            <BrandLogo variant="horizontal" className="h-full w-full" priority />
           </span>
-          <span>
-            <strong className="block text-sm font-black uppercase text-white">ORÇAOBRA</strong>
-            <span className="block text-xs font-semibold text-slate-400">controle financeiro de obras</span>
-          </span>
+          <span className="text-xs font-semibold text-slate-400">controle financeiro de obras</span>
         </Link>
 
         <div className="rounded-xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.22)] backdrop-blur-sm sm:p-7">

@@ -41,7 +41,7 @@ export default function ProjectDetailPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-semibold">Dados da obra</h2>
                 <ProjectStatusBadge status={project.data.status} />
               </div>
@@ -62,9 +62,9 @@ export default function ProjectDetailPage() {
               {budgets.data?.length === 0 ? <EmptyState title="Nenhum orçamento vinculado" /> : null}
               <div className="grid gap-2">
                 {budgets.data?.map((budget) => (
-                  <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex items-center justify-between rounded-md border border-border bg-white p-3 hover:bg-slate-50">
-                    <span>
-                      <span className="block font-medium">#{budget.budget_number} - {budget.title}</span>
+                  <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-white p-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="min-w-0">
+                      <span className="block break-words font-medium">#{budget.budget_number} - {budget.title}</span>
                       <span className="text-xs text-slate-500">{formatDate(budget.issue_date)} · {formatCurrency(budget.total)}</span>
                     </span>
                     <BudgetStatusBadge status={budget.status} />

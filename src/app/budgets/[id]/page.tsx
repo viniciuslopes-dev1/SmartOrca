@@ -146,7 +146,7 @@ export default function BudgetDetailPage() {
                 <Total label="Desconto" value={budget.data.discount_total} />
                 <Total label="Taxas" value={budget.data.tax_total} />
                 <Total label="Margem estimada" value={budget.data.margin_total} />
-                <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
+                <div className="flex flex-col gap-1 border-t border-border pt-2 text-base font-bold min-[380px]:flex-row min-[380px]:justify-between">
                   <span>Total final</span>
                   <span>{formatCurrency(budget.data.total)}</span>
                 </div>
@@ -185,7 +185,7 @@ function Info({ label, value }: { label: string; value?: string | null }) {
 
 function Total({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:justify-between">
       <span className="text-slate-500">{label}</span>
       <span className="font-semibold">{formatCurrency(value)}</span>
     </div>

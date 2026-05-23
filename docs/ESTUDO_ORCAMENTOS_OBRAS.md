@@ -921,7 +921,7 @@ Grupo: Cozinha
   Serviço: Troca de tomadas
 ```
 
-## Recomendação para evolução do ObraTech
+## Recomendação para evolução do SmartOrça
 
 ### Curto prazo
 
@@ -962,4 +962,4 @@ Proposta aprovada vira obra.
 Obra executada gera controle real.
 ```
 
-Portanto, o ObraTech deve evoluir para tratar o orçamento como uma estrutura técnica de serviços compostos, mantendo uma apresentação simples para o cliente final.
+Portanto, o SmartOrça deve evoluir para tratar o orçamento como uma estrutura técnica de serviços compostos, mantendo uma apresentação simples para o cliente final.

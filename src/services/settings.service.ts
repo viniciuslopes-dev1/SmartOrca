@@ -5,14 +5,28 @@ import type { Database } from "@/types/database.types";
 type SettingsUpdate = Database["public"]["Tables"]["settings"]["Update"];
 const LOGO_BUCKET = "workspace-branding";
 const LOGO_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
+export type WorkspaceLogoSlot = "cover" | "proposal";
 
 function fileExtension(fileName: string) {
   return fileName.split(".").pop()?.toLowerCase() ?? "";
 }
 
-function logoPath(workspaceId: string, extension: string) {
+function logoPath(workspaceId: string, extension: string, slot: WorkspaceLogoSlot) {
   const uniqueId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  return `${workspaceId}/logo-${uniqueId}.${extension}`;
+  return `${workspaceId}/${slot}-logo-${uniqueId}.${extension}`;
+}
+
+function logoFields(slot: WorkspaceLogoSlot) {
+  if (slot === "proposal") {
+    return {
+      path: "proposal_logo_path",
+      url: "proposal_logo_url"
+    } as const;
+  }
+  return {
+    path: "logo_path",
+    url: "logo_url"
+  } as const;
 }
 
 function normalizeLogoUploadError(error: { message?: string; code?: string } | null) {
@@ -55,11 +69,12 @@ export function validateLogoFile(file: File, options: { maxSizeBytes: number }) 
   }
 }
 
-export async function uploadWorkspaceLogo(workspaceId: string, file: File) {
+export async function uploadWorkspaceLogo(workspaceId: string, file: File, slot: WorkspaceLogoSlot = "cover") {
   const supabase = getSupabaseClient();
   const extension = fileExtension(file.name);
   const currentSettings = await getSettings(workspaceId);
-  const path = logoPath(workspaceId, extension);
+  const fields = logoFields(slot);
+  const path = logoPath(workspaceId, extension, slot);
 
   const upload = await supabase.storage.from(LOGO_BUCKET).upload(path, file, {
     cacheControl: "0",
@@ -70,21 +85,23 @@ export async function uploadWorkspaceLogo(workspaceId: string, file: File) {
 
   const { data } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path);
   const updatedSettings = await updateSettings(workspaceId, {
-    logo_path: path,
-    logo_url: data.publicUrl
+    [fields.path]: path,
+    [fields.url]: data.publicUrl
   });
 
-  if (currentSettings.logo_path && currentSettings.logo_path !== path) {
-    await supabase.storage.from(LOGO_BUCKET).remove([currentSettings.logo_path]);
+  const previousPath = currentSettings[fields.path];
+  if (previousPath && previousPath !== path) {
+    await supabase.storage.from(LOGO_BUCKET).remove([previousPath]);
   }
 
   return updatedSettings;
 }
 
-export async function removeWorkspaceLogo(workspaceId: string, logoPath?: string | null) {
+export async function removeWorkspaceLogo(workspaceId: string, logoPath?: string | null, slot: WorkspaceLogoSlot = "cover") {
   if (!logoPath) return;
   const supabase = getSupabaseClient();
+  const fields = logoFields(slot);
   const deletion = await supabase.storage.from(LOGO_BUCKET).remove([logoPath]);
   if (deletion.error) throw normalizeSupabaseError(deletion.error);
-  await updateSettings(workspaceId, { logo_path: null, logo_url: null });
+  await updateSettings(workspaceId, { [fields.path]: null, [fields.url]: null });
 }

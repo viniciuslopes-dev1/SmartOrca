@@ -97,7 +97,7 @@ export function ClientForm({
         Cliente ativo
       </label>
       <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
           {isSubmitting ? "Salvando..." : submitLabel}
         </Button>
       </div>

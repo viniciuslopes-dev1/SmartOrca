@@ -268,6 +268,8 @@ export type Settings = {
   default_notes: string | null;
   logo_url: string | null;
   logo_path: string | null;
+  proposal_logo_url: string | null;
+  proposal_logo_path: string | null;
   default_budget_layout: BudgetLayoutId;
   created_at: string;
   updated_at: string;

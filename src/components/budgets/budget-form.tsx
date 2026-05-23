@@ -232,7 +232,7 @@ export function BudgetForm({
               <Select value={newGroupType} onChange={(event) => setNewGroupType(event.target.value as BudgetGroupType)} className="sm:w-52">
                 {Object.entries(budgetGroupTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </Select>
-              <Button type="button" variant="secondary" onClick={addGroup}>
+              <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={addGroup}>
                 <Layers3 className="h-4 w-4" />
                 Adicionar grupo
               </Button>
@@ -338,7 +338,7 @@ function BudgetTotalsPanel({
           <TotalLine label="Descontos aplicados" value={totals.discount_total} />
           <TotalLine label="Impostos e taxas" value={totals.tax_total} />
           <TotalLine label="Margem estimada" value={totals.margin_total} />
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-3 text-base font-bold text-slate-950">
+          <div className="mt-1 flex flex-col gap-1 border-t border-border pt-3 text-base font-bold text-slate-950 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
             <span>Total final</span>
             <span className="text-lg">{formatCurrency(totals.total)}</span>
           </div>
@@ -346,7 +346,7 @@ function BudgetTotalsPanel({
         <p className="text-xs leading-5 text-slate-500">
           Antes de salvar, confira se o total final bate com a proposta que será enviada ao cliente.
         </p>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Salvando..." : submitLabel}
         </Button>
       </CardContent>
@@ -452,11 +452,11 @@ function BudgetGroupEditor({
               <option key={item.id} value={item.id}>{item.name}</option>
             ))}
           </Select>
-          <Button type="button" variant="secondary" onClick={addCatalogItem} disabled={!catalogId}>
+          <Button type="button" variant="secondary" className="w-full" onClick={addCatalogItem} disabled={!catalogId}>
             <Plus className="h-4 w-4" />
             Adicionar do catálogo
           </Button>
-          <Button type="button" variant="secondary" onClick={addManualItem}>
+          <Button type="button" variant="secondary" className="w-full" onClick={addManualItem}>
             <Plus className="h-4 w-4" />
             Adicionar item manual
           </Button>
@@ -513,7 +513,7 @@ function BudgetGroupEditor({
 
 function TotalLine({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
       <span className="text-slate-500">{label}</span>
       <span className="font-semibold">{formatCurrency(value)}</span>
     </div>
