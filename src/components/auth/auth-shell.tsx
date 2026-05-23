@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function AuthShell({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
@@ -6,11 +6,11 @@ export function AuthShell({ title, description, children }: { title: string; des
       <section className="w-full max-w-md rounded-lg border border-border bg-white shadow-industrial">
         <div className="border-b border-border px-6 py-5">
           <div className="mb-4 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-md bg-cyan-800 text-white">
-              <FileText className="h-5 w-5" />
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-border">
+              <BrandLogo variant="mark" className="h-full w-full" priority />
             </span>
             <div>
-              <div className="text-sm font-bold text-slate-950">ObraTech</div>
+              <div className="text-sm font-bold text-slate-950">SmartOrça</div>
               <div className="text-xs text-slate-500">Gestão operacional de orçamentos</div>
             </div>
           </div>

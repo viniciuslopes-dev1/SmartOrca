@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { useRemoveWorkspaceLogo, useSettings, useUpdateSettings, useUploadWorkspaceLogo } from "@/hooks/useSettings";
 import { BUDGET_LAYOUTS, resolveBudgetLayoutId } from "@/lib/budget-layouts";
-import { validateLogoFile } from "@/services/settings.service";
+import { validateLogoFile, type WorkspaceLogoSlot } from "@/services/settings.service";
 import type { Settings } from "@/types/database.types";
 
 type SettingsFormValues = Pick<
@@ -39,7 +39,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
   const update = useUpdateSettings();
   const uploadLogo = useUploadWorkspaceLogo();
   const removeLogo = useRemoveWorkspaceLogo();
-  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoErrors, setLogoErrors] = useState<Record<WorkspaceLogoSlot, string | null>>({ cover: null, proposal: null });
   const [selectedLayout, setSelectedLayout] = useState(resolveBudgetLayoutId(settings.default_budget_layout));
 
   const { register, handleSubmit, setValue, watch } = useForm<SettingsFormValues>({
@@ -79,15 +79,15 @@ function SettingsForm({ settings }: { settings: Settings }) {
     ]
   }), []);
 
-  async function onSelectLogo(file?: File) {
+  async function onSelectLogo(slot: WorkspaceLogoSlot, file?: File) {
     if (!file) return;
-    setLogoError(null);
+    setLogoErrors((current) => ({ ...current, [slot]: null }));
     try {
       validateLogoFile(file, { maxSizeBytes: LOGO_MAX_SIZE_BYTES });
       await validateImageDimensions(file);
-      await uploadLogo.mutateAsync(file);
+      await uploadLogo.mutateAsync({ file, slot });
     } catch (error) {
-      setLogoError((error as Error).message);
+      setLogoErrors((current) => ({ ...current, [slot]: (error as Error).message }));
     }
   }
 
@@ -95,29 +95,31 @@ function SettingsForm({ settings }: { settings: Settings }) {
     <div className="grid gap-4">
       <Card>
         <CardHeader><h2 className="font-semibold">Identidade visual</h2></CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-[180px_1fr]">
-          <div className="flex h-36 items-center justify-center overflow-hidden rounded-lg border border-border bg-slate-50">
-            {settings.logo_url ? <img src={settings.logo_url} alt="Logo da empresa" className="h-full w-full object-contain" /> : <span className="text-xs text-slate-500">Sem logo</span>}
-          </div>
-          <div className="grid gap-3">
-            <p className="text-sm text-slate-600">Formatos: PNG, JPG, JPEG e WEBP. Tamanho maximo: 2MB.</p>
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0];
-                event.currentTarget.value = "";
-                void onSelectLogo(file);
-              }}
-            />
-            <div className="flex gap-2">
-              <Button type="button" variant="secondary" disabled={removeLogo.isPending || !settings.logo_path} onClick={() => removeLogo.mutate(settings.logo_path)}>
-                {removeLogo.isPending ? "Removendo..." : "Remover logo"}
-              </Button>
-            </div>
-            {uploadLogo.isPending ? <p className="text-sm text-slate-500">Enviando logo...</p> : null}
-            {logoError || uploadLogo.isError ? <p className="text-sm font-medium text-red-700">{logoError ?? (uploadLogo.error as Error).message}</p> : null}
-          </div>
+        <CardContent className="grid gap-4 xl:grid-cols-2">
+          <LogoUploadPanel
+            title="Logo da capa"
+            description="Usado apenas na capa do PDF."
+            imageUrl={settings.logo_url}
+            imagePath={settings.logo_path}
+            slot="cover"
+            error={logoErrors.cover}
+            isUploading={uploadLogo.isPending}
+            isRemoving={removeLogo.isPending}
+            onSelectLogo={onSelectLogo}
+            onRemoveLogo={(logoPath) => removeLogo.mutate({ logoPath, slot: "cover" })}
+          />
+          <LogoUploadPanel
+            title="Logo da proposta comercial"
+            description="Usado no cabeçalho e na marca d'água da proposta. Se ficar vazio, usa o logo da capa."
+            imageUrl={settings.proposal_logo_url}
+            imagePath={settings.proposal_logo_path}
+            slot="proposal"
+            error={logoErrors.proposal}
+            isUploading={uploadLogo.isPending}
+            isRemoving={removeLogo.isPending}
+            onSelectLogo={onSelectLogo}
+            onRemoveLogo={(logoPath) => removeLogo.mutate({ logoPath, slot: "proposal" })}
+          />
         </CardContent>
       </Card>
 
@@ -158,7 +160,7 @@ function SettingsForm({ settings }: { settings: Settings }) {
               <input type="hidden" {...register("default_budget_layout")} />
             </div>
 
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
               {update.isSuccess ? <span className="text-sm font-medium text-emerald-700">Configuracoes salvas.</span> : null}
               {update.isError ? <span className="text-sm font-medium text-red-700">{(update.error as Error).message}</span> : null}
               <Button type="submit" disabled={update.isPending}>{update.isPending ? "Salvando..." : "Salvar configuracoes"}</Button>
@@ -170,9 +172,68 @@ function SettingsForm({ settings }: { settings: Settings }) {
       <Card>
         <CardHeader><h2 className="font-semibold">Preview do template</h2></CardHeader>
         <CardContent>
-          <BudgetLayoutPreview budget={{ ...(previewBudget as any), budget_layout: selectedLayout }} settings={{ ...settings, default_budget_layout: selectedLayout }} layoutId={selectedLayout} />
+          <div className="industrial-scrollbar max-w-full overflow-x-auto">
+            <div className="min-w-[720px]">
+              <BudgetLayoutPreview budget={{ ...(previewBudget as any), budget_layout: selectedLayout }} settings={{ ...settings, default_budget_layout: selectedLayout }} layoutId={selectedLayout} />
+            </div>
+          </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function LogoUploadPanel({
+  title,
+  description,
+  imageUrl,
+  imagePath,
+  slot,
+  error,
+  isUploading,
+  isRemoving,
+  onSelectLogo,
+  onRemoveLogo
+}: {
+  title: string;
+  description: string;
+  imageUrl?: string | null;
+  imagePath?: string | null;
+  slot: WorkspaceLogoSlot;
+  error?: string | null;
+  isUploading: boolean;
+  isRemoving: boolean;
+  onSelectLogo: (slot: WorkspaceLogoSlot, file?: File) => void | Promise<void>;
+  onRemoveLogo: (logoPath?: string | null) => void;
+}) {
+  return (
+    <div className="grid gap-4 rounded-lg border border-border bg-white p-4 md:grid-cols-[180px_1fr]">
+      <div className="flex h-36 items-center justify-center overflow-hidden rounded-lg border border-border bg-slate-50">
+        {imageUrl ? <img src={imageUrl} alt={title} className="h-full w-full object-contain" /> : <span className="text-xs text-slate-500">Sem logo</span>}
+      </div>
+      <div className="grid gap-3">
+        <div>
+          <h3 className="font-semibold">{title}</h3>
+          <p className="text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-sm text-slate-600">Formatos: PNG, JPG, JPEG e WEBP. Tamanho maximo: 2MB.</p>
+        </div>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={(event) => {
+            const file = event.currentTarget.files?.[0];
+            event.currentTarget.value = "";
+            void onSelectLogo(slot, file);
+          }}
+        />
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button type="button" variant="secondary" disabled={isRemoving || !imagePath} onClick={() => onRemoveLogo(imagePath)}>
+            {isRemoving ? "Removendo..." : "Remover logo"}
+          </Button>
+        </div>
+        {isUploading ? <p className="text-sm text-slate-500">Enviando logo...</p> : null}
+        {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
+      </div>
     </div>
   );
 }

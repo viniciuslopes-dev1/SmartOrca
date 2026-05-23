@@ -401,7 +401,7 @@ Ponto elétrico simples
 
 Ou seja, ela está um nível acima: é uma tabela de serviços parametrizados, não uma tabela de insumos detalhados.
 
-## Como importar essa planilha para o ObraTech
+## Como importar essa planilha para o SmartOrça
 
 ### Importação inicial recomendada
 
@@ -426,7 +426,7 @@ COEF.               -> default_margin ou pricing_coefficient
 VALOR UNITÁRIO (R$) -> price_unit
 ```
 
-No modelo atual do ObraTech, `catalog_items` não tem `external_code` nem `pricing_coefficient`. Então existem duas opções.
+No modelo atual do SmartOrça, `catalog_items` não tem `external_code` nem `pricing_coefficient`. Então existem duas opções.
 
 ### Opção simples
 
@@ -499,7 +499,7 @@ TOTAL        -> total final do item
 
 Ponto importante:
 
-O ObraTech hoje calcula:
+O SmartOrça hoje calcula:
 
 ```txt
 subtotal_item = quantidade x preço_unitário - desconto
@@ -714,7 +714,7 @@ Unidade
 Preço unitário
 ```
 
-## Como isso melhora o ObraTech
+## Como isso melhora o SmartOrça
 
 Com essa importação, o cliente não precisa recadastrar 85 serviços manualmente.
 
@@ -781,4 +781,4 @@ Para este cliente, o primeiro importador deveria focar em:
 Excel -> Catálogo de Serviços -> Orçamento rápido por código/serviço
 ```
 
-Depois, em uma evolução posterior, o ObraTech pode permitir que esses serviços sejam transformados em composições detalhadas com materiais, mão de obra e equipamentos.
+Depois, em uma evolução posterior, o SmartOrça pode permitir que esses serviços sejam transformados em composições detalhadas com materiais, mão de obra e equipamentos.

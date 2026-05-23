@@ -48,9 +48,9 @@ export default function DashboardPage() {
                 {dashboard.data.recentBudgets.length === 0 ? <EmptyState title="Nenhum orçamento criado" description="Use os atalhos para iniciar o primeiro orçamento." /> : null}
                 <div className="grid gap-2">
                   {dashboard.data.recentBudgets.map((budget) => (
-                    <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex items-center justify-between rounded-md border border-border bg-white p-3 hover:bg-slate-50">
-                      <span>
-                        <span className="block font-medium">#{budget.budget_number} - {budget.title}</span>
+                    <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-white p-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="min-w-0">
+                        <span className="block break-words font-medium">#{budget.budget_number} - {budget.title}</span>
                         <span className="text-xs text-slate-500">{budget.clients?.name ?? "-"} · {formatCurrency(budget.total)}</span>
                       </span>
                       <BudgetStatusBadge status={budget.status} />
@@ -66,9 +66,9 @@ export default function DashboardPage() {
               {dashboard.data.recentProjects.length === 0 ? <EmptyState title="Nenhuma obra cadastrada" /> : null}
               <div className="grid gap-2 md:grid-cols-2">
                 {dashboard.data.recentProjects.map((project) => (
-                  <Link key={project.id} href={`/projects/${project.id}`} className="flex items-center justify-between rounded-md border border-border bg-white p-3 hover:bg-slate-50">
-                    <span>
-                      <span className="block font-medium">{project.name}</span>
+                  <Link key={project.id} href={`/projects/${project.id}`} className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-white p-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="min-w-0">
+                      <span className="block break-words font-medium">{project.name}</span>
                       <span className="text-xs text-slate-500">{project.clients?.name ?? "-"} · {formatDate(project.created_at.slice(0, 10))}</span>
                     </span>
                     <ProjectStatusBadge status={project.status} />
@@ -86,10 +86,10 @@ export default function DashboardPage() {
 function Metric({ title, value, icon }: { title: string; value: React.ReactNode; icon: React.ReactNode }) {
   return (
     <Card>
-      <CardContent className="flex items-center justify-between">
-        <div>
+      <CardContent className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <div className="text-xs font-semibold uppercase text-slate-500">{title}</div>
-          <div className="mt-1 text-2xl font-bold text-slate-950">{value}</div>
+          <div className="mt-1 break-words text-xl font-bold text-slate-950 sm:text-2xl">{value}</div>
         </div>
         <div className="rounded-md bg-cyan-800 p-2 text-white">{icon}</div>
       </CardContent>
@@ -110,8 +110,8 @@ function SmallMetric({ label, value }: { label: string; value: React.ReactNode }
 
 function QuickLink({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) {
   return (
-    <Link href={href} className="flex items-center justify-between rounded-md border border-border bg-white p-3 text-sm font-semibold hover:bg-slate-50">
-      <span className="flex items-center gap-2">{icon}{label}</span>
+    <Link href={href} className="flex min-w-0 items-center justify-between gap-3 rounded-md border border-border bg-white p-3 text-sm font-semibold hover:bg-slate-50">
+      <span className="flex min-w-0 items-center gap-2">{icon}<span className="break-words">{label}</span></span>
       <Plus className="h-4 w-4 text-primary" />
     </Link>
   );

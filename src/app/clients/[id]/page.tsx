@@ -42,7 +42,7 @@ export default function ClientDetailPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-semibold">Cadastro</h2>
                 <ActiveBadge active={client.data.is_active} />
               </div>
@@ -65,8 +65,8 @@ export default function ClientDetailPage() {
                 {relations.data?.projects.length === 0 ? <EmptyState title="Nenhuma obra vinculada" /> : null}
                 <div className="grid gap-2">
                   {relations.data?.projects.map((project) => (
-                    <Link key={project.id} href={`/projects/${project.id}`} className="flex items-center justify-between rounded-md border border-border bg-white p-3 hover:bg-slate-50">
-                      <span className="font-medium">{project.name}</span>
+                    <Link key={project.id} href={`/projects/${project.id}`} className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-white p-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="break-words font-medium">{project.name}</span>
                       <ProjectStatusBadge status={project.status} />
                     </Link>
                   ))}
@@ -79,9 +79,9 @@ export default function ClientDetailPage() {
                 {relations.data?.budgets.length === 0 ? <EmptyState title="Nenhum orçamento vinculado" /> : null}
                 <div className="grid gap-2">
                   {relations.data?.budgets.map((budget) => (
-                    <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex items-center justify-between rounded-md border border-border bg-white p-3 hover:bg-slate-50">
-                      <span>
-                        <span className="block font-medium">#{budget.budget_number} - {budget.title}</span>
+                    <Link key={budget.id} href={`/budgets/${budget.id}`} className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-white p-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="min-w-0">
+                        <span className="block break-words font-medium">#{budget.budget_number} - {budget.title}</span>
                         <span className="text-xs text-slate-500">{formatDate(budget.issue_date)} · {formatCurrency(budget.total)}</span>
                       </span>
                       <BudgetStatusBadge status={budget.status} />

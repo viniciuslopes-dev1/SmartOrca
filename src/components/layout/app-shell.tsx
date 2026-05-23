@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Boxes, Building2, ClipboardList, FileText, Home, LogOut, Menu, Settings, Users, X } from "lucide-react";
+import { BarChart3, Boxes, Building2, ClipboardList, Home, LogOut, Menu, Settings, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { LoadingState } from "@/components/feedback/data-state";
 import { cn } from "@/lib/utils";
 import { useSignOut } from "@/hooks/useAuth";
@@ -71,21 +72,21 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-w-0 bg-background">
       {open ? <button className="fixed inset-0 z-30 bg-slate-950/45 lg:hidden" onClick={() => setOpen(false)} aria-label="Fechar menu" /> : null}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-800/80 bg-slate-950 text-white shadow-2xl transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-[min(18rem,calc(100vw-2rem))] border-r border-slate-800/80 bg-slate-950 text-white shadow-2xl transition-transform duration-200 lg:w-72 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-800/80 px-4">
           <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 shadow-md">
-              <FileText className="h-5 w-5" />
+            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-md">
+              <BrandLogo variant="mark" className="h-full w-full" priority />
             </span>
             <span>
-              <strong className="block text-sm tracking-tight text-slate-100">Orçamentos</strong>
+              <strong className="block text-sm tracking-tight text-slate-100">SmartOrça</strong>
               <span className="block text-xs text-slate-400">Painel operacional</span>
             </span>
           </Link>
@@ -115,12 +116,12 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
 
-      <div className="lg:pl-72">
+      <div className="min-w-0 lg:pl-72">
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border/80 bg-white/85 px-4 backdrop-blur-md md:px-6">
           <button className="rounded-md border border-border p-2 lg:hidden" onClick={() => setOpen(true)} aria-label="Abrir menu">
             <Menu className="h-5 w-5" />
           </button>
-          <div className="hidden text-sm font-medium tracking-wide text-slate-600 lg:block">Ambiente de orçamento técnico</div>
+          <div className="hidden text-sm font-medium tracking-wide text-slate-600 lg:block">SmartOrça | Ambiente de orçamento técnico</div>
           <div className="flex items-center gap-2">
             <div className="hidden rounded-lg border border-border/80 bg-slate-100/70 px-3 py-1 text-xs font-semibold text-slate-600 md:block">
               {workspace.currentWorkspace?.name ?? "Workspace"}
@@ -135,7 +136,7 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl px-4 py-7 md:px-6">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-3 py-5 sm:px-4 md:px-6 md:py-7">{children}</main>
       </div>
     </div>
   );

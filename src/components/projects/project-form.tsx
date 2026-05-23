@@ -95,7 +95,7 @@ export function ProjectForm({
         <Textarea {...register("notes")} />
       </Field>
       <div className="flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
           {isSubmitting ? "Salvando..." : submitLabel}
         </Button>
       </div>

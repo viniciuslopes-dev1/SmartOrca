@@ -22,8 +22,13 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.11), transparent 36%),
     radial-gradient(circle at 100% 0%, rgba(37, 99, 235, 0.08), transparent 30%),
@@ -62,11 +67,12 @@ select {
   }
 
   .list-toolbar {
-    @apply flex flex-col gap-3 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between;
+    @apply flex flex-col gap-3 border-b border-border px-4 py-4 sm:px-5 md:flex-row md:items-center md:justify-between;
   }
 
   .table-wrap {
-    @apply industrial-scrollbar overflow-x-auto;
+    @apply industrial-scrollbar max-w-full overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .data-table {
@@ -78,7 +84,7 @@ select {
   }
 
   .data-table th {
-    @apply px-4 py-3;
+    @apply px-3 py-3 sm:px-4;
   }
 
   .data-table tbody {
@@ -86,7 +92,7 @@ select {
   }
 
   .data-table td {
-    @apply px-4 py-3.5 align-top;
+    @apply px-3 py-3.5 align-top sm:px-4;
   }
 
   .row-link {

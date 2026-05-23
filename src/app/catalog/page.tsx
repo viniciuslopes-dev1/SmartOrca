@@ -35,7 +35,7 @@ export default function CatalogPage() {
         title="Produtos e serviços"
         description="Itens reutilizáveis para acelerar a montagem de orçamentos."
         actions={
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Link href="/catalog/import">
               <Button variant="secondary">
                 <FileSpreadsheet className="h-4 w-4" />

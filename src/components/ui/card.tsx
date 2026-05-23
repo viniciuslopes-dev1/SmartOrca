@@ -5,9 +5,9 @@ export function Card({ children, className }: { children: React.ReactNode; class
 }
 
 export function CardHeader({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("border-b border-border/80 bg-slate-50/70 px-5 py-3.5", className)}>{children}</div>;
+  return <div className={cn("border-b border-border/80 bg-slate-50/70 px-4 py-3.5 sm:px-5", className)}>{children}</div>;
 }
 
 export function CardContent({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("p-5", className)}>{children}</div>;
+  return <div className={cn("p-4 sm:p-5", className)}>{children}</div>;
 }
